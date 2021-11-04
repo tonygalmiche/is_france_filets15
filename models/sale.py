@@ -228,8 +228,10 @@ class SaleOrder(models.Model):
 
     def _compute_ca_m2(self):
         for obj in self:
+            ca=0
             if obj.is_superficie_m2:
-                obj.is_ca_m2=obj.is_ca_hors_nacelle/obj.is_superficie_m2
+                ca=obj.is_ca_hors_nacelle/obj.is_superficie_m2
+            obj.is_ca_m2=ca
 
 
     @api.depends('is_controle_gestion_ids')
@@ -303,9 +305,15 @@ class SaleOrder(models.Model):
     def _compute_chantier_id(self):
         for obj in self:
             chantiers = self.env['is.chantier'].search([('order_id','=',obj.id)])
+            is_chantier_id = False
+            is_filet_ids   = False
             for chantier in chantiers:
-                obj.is_chantier_id = chantier.id
-                obj.is_filet_ids   = chantier.filet_ids
+                is_chantier_id = chantier.id
+                is_filet_ids   = chantier.filet_ids
+            obj.is_chantier_id = is_chantier_id
+            obj.is_filet_ids   = is_filet_ids
+
+
 
 
     is_nom_chantier         = fields.Char(u'Nom du chantier')
