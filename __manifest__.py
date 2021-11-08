@@ -28,7 +28,7 @@ InfoSaône - Module Odoo 15 pour France Filets
         'views/res_company_view.xml',
         'views/partner_view.xml',
         'views/sale_view.xml',
-        # 'views/account_invoice_view.xml',
+        'views/account_move_view.xml',
         'views/is_export_compta_view.xml',
         'views/is_sale_order_line.xml',
         # 'views/is_account_invoice_line.xml',
