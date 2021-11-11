@@ -70,14 +70,14 @@
                 <field name="website" position="before">
                     <field name="is_groupe_client_id"/>
                 </field>
-                <xpath expr="//field[@name='category_id']" position="after">
+                <xpath expr="//field[@name='vat']" position="after">
                     <field name="is_type_partenaire"     attrs="{'invisible': [('is_company', '=', False)]}" />
                     <field name="is_date_commande"       attrs="{'invisible': ['|',('is_company', '=', False),('is_type_partenaire', '!=', 'Client')]}" />
                     <field name="is_region_id"           attrs="{'invisible': [('is_company', '=', False)]}"/>
                     <field name="is_secteur_activite_id" attrs="{'invisible': [('is_company', '=', False)]}"/>
                 </xpath>
 
-                <xpath expr="//field[@name='lang']" position="after">
+                <xpath expr="//field[@name='active_lang_count']" position="before">
                     <field name="is_date_creation" attrs="{'invisible': [('is_company', '=', False)]}"/>
                     <field name="is_origine_id" attrs="{'invisible': [('is_company', '=', False)]}"/>
                 </xpath>
