@@ -919,6 +919,7 @@ class IsPlanningLine(models.Model):
 
 class IsPlanning(models.Model):
     _name='is.planning'
+    _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
     _description = "IsPlanning"
     _order='name desc'
 
