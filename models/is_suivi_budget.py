@@ -476,6 +476,7 @@ class IsSuiviBudget(models.Model):
         mois=[]
         for obj in self:
             for m in obj.mois_ids:
+                print(obj,m)
                 m.ca_budget_html       = self.val2html(m.ca_budget)
                 m.re_previsionnel_html = self.val2htmlcolor(m.re_previsionnel)
                 m.re_realise_html      = self.val2htmlcolor(m.re_realise)
@@ -510,7 +511,8 @@ class IsSuiviBudget(models.Model):
 
 
     def get_periode(self,m):
-        d = datetime.strptime(m.mois, '%Y-%m-%d')
+        #d = datetime.strptime(m.mois, '%Y-%m-%d')
+        d = m.mois
         r={}
         r['mois']  = d.strftime('%m/%Y')
         r['debut'] = d - timedelta(days=d.day-1)
@@ -800,12 +802,24 @@ class IsSuiviBudgetMois(models.Model):
     _order='mois'
 
     suivi_id        = fields.Many2one('is.suivi.budget', 'Suivi Budget', required=True, ondelete='cascade',index=True)
-    mois            = fields.Date(u"Mois", required=True)
-    ca_budget       = fields.Integer(u"CA Budget")
-    re_previsionnel = fields.Integer(u"RE prévisionnel en valeur")
-    re_realise      = fields.Integer(u"RE réalisé en valeur")
-    part_achat      = fields.Integer(u"Part achats dans CA")
-    objectif_ca_sud = fields.Integer(u"Objectif CA Sud Ouest et Sud Est")
+    mois            = fields.Date("Mois", required=True)
+    ca_budget       = fields.Integer("CA Budget")
+    re_previsionnel = fields.Integer("RE prévisionnel en valeur")
+    re_realise      = fields.Integer("RE réalisé en valeur")
+    part_achat      = fields.Integer("Part achats dans CA")
+    objectif_ca_sud = fields.Integer("Objectif CA Sud Ouest et Sud Est")
+
+
+    # TODO : Avec Odoo 15, il semble necessaire de créer ces champs
+    # ca_budget_html       = fields.Char("CA Budget")
+    # re_previsionnel_html = fields.Char("RE prévisionnel en valeur")
+    # re_realise_html      = fields.Char("RE réalisé en valeur")
+    # part_achat_html      = fields.Char("Part achats dans CA")
+    # objectif_ca_sud_html = fields.Char("Objectif CA Sud Ouest et Sud Est")
+
+
+
+
 
 
 class IsSuiviBudgetTopClient(models.Model):

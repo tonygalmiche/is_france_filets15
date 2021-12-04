@@ -1,276 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
-
-    <template id="is_suivi_budget_report_layout" inherit_id="web.layout" primary="True">
-        <!-- Add report attributes -->
-        <xpath expr="//html" position="attributes">
-            <attribute name="t-att-data-report-margin-top">data_report_margin_top if data_report_margin_top else None</attribute>
-            <attribute name="t-att-data-report-header-spacing">data_report_header_spacing if data_report_header_spacing else None</attribute>
-            <attribute name="t-att-data-report-dpi">data_report_dpi if data_report_dpi else None</attribute>
-        </xpath>
-        <!-- Add report style -->
-        <xpath expr="//head" position="inside">
-            <link href="/web/static/lib/bootstrap/css/bootstrap.css" rel="stylesheet"/>
-            <link href="/website/static/src/css/website.css" rel="stylesheet"/>
-            <link href="/web/static/lib/fontawesome/css/font-awesome.css" rel="stylesheet"/>
-        </xpath>
-    </template>
-
-
-    <template id="is_suivi_budget_report_html_container">
-        <t t-set="body_classname" t-value="'container'"/>
-        <t t-call="is_france_filets.is_suivi_budget_report_layout">
-            <t t-raw="0"/>
-        </t>
-    </template>
-
-
-    <!-- Entête personnalisé -->
-    <template id="is_suivi_budget_report_external_layout_header">
-        <div class="header">
+    <template id="is_suivi_budget_external_layout_standard">
+        <t t-set="company" t-value="res_company"/>
+        <div t-attf-class="header" t-att-style="report_header_style">
+        </div>
+        <div t-attf-class="article o_report_layout_standard" t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-out="0"/>
+        </div>
+        <div t-attf-class="footer o_standard_footer">
         </div>
     </template>
 
-
-
-    <!-- Pied de page personnalisé -->
-    <template id="is_suivi_budget_report_external_layout_footer">
-        <div class="footer">
-        </div>
+    <template id="is_suivi_budget_external_layout">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+        <t t-call="is_france_filets15.is_suivi_budget_external_layout_standard"><t t-out="0"/></t>
     </template>
 
-
-    <!-- Squelette de la page personnalisé -->
-    <template id="is_suivi_budget_report_external_layout">
-        <t t-if="o and 'company_id' in o">
-            <t t-set="company" t-value="o.company_id"/>
+    <template id="is_suivi_budget_report_document">
+        <t t-call="is_france_filets15.is_suivi_budget_external_layout">
+            <div class="page">
+                <style>
+                    h1{
+                        text-align:center;
+                    }
+                    th{
+                        font-size:10pt;
+                        padding:2pt;
+                        border:1px solid black;
+                        text-align:center;
+                        background-color:LawnGreen;
+                    }
+                    td{
+                        font-size:10pt;
+                        padding:2pt;
+                        margin:2pt;
+                        border:1px solid black;
+                    }
+                    .titre{
+                        font-size:11pt;
+                        font-weight: bold;
+                        background-color:Gainsboro;
+                        margin:2pt;
+                    }
+                    .style1{
+                        font-size:10pt;
+                        text-align: right;
+                        padding-right: 1em;
+                        white-space: nowrap;
+                    }
+                </style>
+                <h1><span t-field="o.name"/> imprimé le <t t-raw="o.get_now()"/></h1>
+                <div t-raw="o.get_html()"/>
+            </div>
         </t>
-        <t t-if="not o or not 'company_id' in o">
-            <t t-set="company" t-value="res_company"/>
-        </t>
-        <t t-call="is_france_filets.is_suivi_budget_report_external_layout_header"/>
-        <t t-raw="0"/>
-        <t t-call="is_france_filets.is_suivi_budget_report_external_layout_footer"/>
     </template>
-
-
+    
     <template id="is_suivi_budget_report">
-        <t t-call="is_france_filets.is_suivi_budget_report_html_container">
+        <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
-                <t t-call="is_france_filets.is_suivi_budget_report_external_layout">
-                    <div class="page">
-                        <style>
-                            h1{
-                                text-align:center;
-                            }
-                            th{
-                                font-size:10pt;
-                                padding:2pt;
-                                border:1px solid black;
-                                text-align:center;
-                                background-color:LawnGreen;
-                            }
-                            td{
-                                font-size:10pt;
-                                padding:2pt;
-                                margin:2pt;
-                                border:1px solid black;
-                            }
-                            .titre{
-                                font-size:11pt;
-                                font-weight: bold;
-                                background-color:Gainsboro;
-                                margin:2pt;
-                            }
-                            .style1{
-                                font-size:10pt;
-                                text-align: right;
-                                padding-right: 1em;
-                                white-space: nowrap;
-                            }
-
-
-
-                        </style>
-                        <h1><span t-field="o.name"/> imprimé le <t t-raw="o.get_now()"/></h1>
-                        <div t-raw="o.get_html()"/>
-
-
-
-
-                        <!--
-                        <table style="border:1px solid black; width:100%;border-collapse: collapse;">
-                            <tr>
-                                <td>Mois</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <th><span t-esc="o.get_periode(m)['mois']"/></th>
-                                </t>
-                            </tr>
-
-                            <tr>
-                                <td>CA Budget</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><span t-raw="m.ca_budget_html"/></td>
-                                </t>
-                            </tr>
-
-
-                            <tr>
-                                <td colspan="13" class="titre">CA Prévisionnel</td>
-                            </tr>
-
-
-
-                            <tr>
-                                <td>Carnet de commande (ferme)</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><span t-raw="o.val2html(m.ca_carnet_commande_ferme)"/></td>
-                                </t>
-                            </tr>
-                            <tr>
-                                <td>Prévisionnel (avec taux transformation)</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><span t-raw="o.val2html(m.ca_carnet_commande_prev)"/></td>
-                                </t>
-                            </tr>
-                            <tr>
-                                <td>TOTAL Prévision</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><span t-raw="o.val2html(m.total_prevision)"/></td>
-                                </t>
-                            </tr>
-                            <tr>
-                                <td>Écart avec budget</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><span t-raw="o.val2htmlcolor(m.ecart_budget)"/></td>
-                                </t>
-                            </tr>
-
-
-                            <tr>
-                                <td colspan="13" class="titre">CA Réalisé</td>
-                            </tr>
-                            <tr>
-                                <td>CA Réalisé HT</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><span t-raw="o.val2html(o.get_ca_realise(m))"/></td>
-                                </t>
-                            </tr>
-                            <tr>
-                                <td>Écart avec budget en valeur</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td> </td>
-                                </t>
-                            </tr>
-                            <tr>
-                                <td>Écart avec budget en % </td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td> </td>
-                                </t>
-                            </tr>
-                            <tr>
-                                <td colspan="13" class="titre">Résultat réalisé</td>
-                            </tr>
-                            <tr>
-                                <td>RE  prévisionnel en valeur</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><span t-raw="m.re_previsionnel_html"/></td>
-                                </t>
-                            </tr>
-                            <tr>
-                                <td>RE  réalisé en valeur</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><span t-raw="m.re_realise_html"/></td>
-                                </t>
-                            </tr>
-
-                            <tr>
-                                <td colspan="13" class="titre">Indicateur de carnet Cde</td>
-                            </tr>
-
-                            <tr>
-                                <td>Cde Moyenne</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td> </td>
-                                </t>
-                            </tr>
-                            <tr>
-                                <td>Facture > 30 Keuro (en quantité)</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td> </td>
-                                </t>
-                            </tr>
-
-
-                            <tr>
-                                <td colspan="13" class="titre">Suivi  Top Clients (11)</td>
-                            </tr>
-
-                            <t t-foreach="o.get_clients()" t-as="c">
-                                <tr>
-                                    <td><span t-raw="c.partner_id.name"/></td>
-                                    <t t-foreach="o.get_mois()" t-as="m">
-                                        <td class="style1"><span t-raw="o.val2html(o.get_ca_realise(m,[str(c.partner_id.id)]))"/></td>
-                                    </t>
-                                </tr>
-                            </t>
-
-                            <tr>
-                                <td>Total</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><b><span t-raw="o.get_ca_realise_top(m)"/></b></td>
-                                </t>
-                            </tr>
-                            <tr>
-                                <td>Autres clients</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><b><span t-raw="o.get_ca_realise_autre(m)"/></b></td>
-                                </t>
-                            </tr>
-
-                            <tr>
-                                <td colspan="13" class="titre">Nouvelles affaires</td>
-                            </tr>
-
-                            <tr>
-                                <td>En Valeur</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><span t-raw="o.get_ca_realise_nouveau(m)"/></td>
-                                </t>
-                            </tr>
-                            <tr>
-                                <td>En % du CA mensuel</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td> </td>
-                                </t>
-                            </tr>
-
-
-                            <tr>
-                                <td colspan="13" class="titre">Dont CA Sud Ouest et Sud Est</td>
-                            </tr>
-
-
-                            <tr>
-                                <td>Objectif mensuel</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td class="style1"><span t-raw="m.objectif_ca_sud_html"/></td>
-                                </t>
-                            </tr>
-                            <tr>
-                                <td>Réalisé en Valeur</td>
-                                <t t-foreach="o.get_mois()" t-as="m">
-                                    <td> </td>
-                                </t>
-                            </tr>
-                        </table>
-                        -->
-
-                    </div>
-                </t>
+                <t t-call="is_france_filets15.is_suivi_budget_report_document"/>
             </t>
         </t>
     </template>
-
 </odoo>

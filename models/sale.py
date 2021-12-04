@@ -433,8 +433,10 @@ class IsCreationPlanning(models.Model):
         cr = self._cr
         dates=[]
         for obj in self:
-            d1=datetime.strptime(obj.date_debut, '%Y-%m-%d')
-            d2=datetime.strptime(obj.date_fin, '%Y-%m-%d')
+            #d1=datetime.strptime(obj.date_debut, '%Y-%m-%d')
+            #d2=datetime.strptime(obj.date_fin, '%Y-%m-%d')
+            d1=obj.date_debut
+            d2=obj.date_fin
             jours=(d2-d1).days+1
             for d in range(0, jours):
                 dates.append(d1.strftime('%d/%m/%Y'))
