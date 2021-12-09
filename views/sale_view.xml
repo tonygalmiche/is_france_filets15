@@ -1,37 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
-
-
-        <!-- <record id="is_controle_gestion_action_server" model="ir.actions.server">
-             <field name="name">Initialiser tableau contrôle de gestion</field>
-            <field name="model_id" ref="model_sale_order"/>
-            <field name="code">records.init_controle_gestion_action()</field>
-        </record>
-        <record id="is_controle_gestion_ir_value" model="ir.values">
-            <field eval="'client_action_multi'" name="key2"/>
-            <field eval="'sale.order'" name="model"/>
+        <record id="is_controle_gestion_action_server" model="ir.actions.server">
             <field name="name">Initialiser tableau contrôle de gestion</field>
-            <field eval="'ir.actions.server,%d'%is_controle_gestion_action_server" name="value"/>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">action = records.init_controle_gestion_action()</field>
         </record>
- -->
-
-
-        <!-- Commande facturée -->
-        <!-- <record id="commande_facturee_sale_order_action_server" model="ir.actions.server">
-             <field name="name">Forcer entièrement facturé</field>
-            <field name="model_id" ref="model_sale_order"/>
-            <field name="code">records.forcer_entierement_facture_action()</field>
-        </record>
-        <record id="commande_facturee_sale_order_ir_value" model="ir.values">
-            <field eval="'client_action_multi'" name="key2"/>
-            <field eval="'sale.order'" name="model"/>
+        <record id="commande_facturee_sale_order_action_server" model="ir.actions.server">
             <field name="name">Forcer entièrement facturé</field>
-            <field eval="'ir.actions.server,%d'%commande_facturee_sale_order_action_server" name="value"/>
-        </record> -->
-
-
-
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">action = records.forcer_entierement_facture_action()</field>
+        </record>
         <record id="is_sale_order_form" model="ir.ui.view">
             <field name="name">is_sale_order_form</field>
             <field name="model">sale.order</field>

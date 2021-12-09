@@ -39,14 +39,14 @@ class IsSuiviBudget(models.Model):
                     ai.number,
                     ai.amount_untaxed,
                     ai.partner_id
-                FROM account_invoice ai inner join res_partner     rp on ai.partner_id=rp.id
+                FROM account_move ai inner join res_partner     rp on ai.partner_id=rp.id
                                         left outer join is_region  ir on rp.is_region_id=ir.id
                                         left outer join is_origine io on rp.is_origine_id=io.id
                 WHERE 
-                    ai.date_invoice>='"""+str(obj.date_debut)+"""' and
-                    ai.date_invoice<='"""+str(obj.date_fin)+"""' and
-                    ai.type='out_invoice' and
-                    ai.state in ('open','paid') and
+                    ai.invoice_date>='"""+str(obj.date_debut)+"""' and
+                    ai.invoice_date<='"""+str(obj.date_fin)+"""' and
+                    ai.move_type='out_invoice' and
+                    ai.state='posted' and
                     ai.amount_untaxed>0
                 ORDER BY ai.number desc
             """
@@ -128,7 +128,7 @@ class IsSuiviBudget(models.Model):
 
 
     def get_html(self):
-        now = datetime.now()
+        now = datetime.now().date()
         mois=[]
         tab={}
         for obj in self:
@@ -277,7 +277,7 @@ class IsSuiviBudget(models.Model):
                 val = obj.get_commande_moyenne(periode['debut'],periode['fin'])
                 html+=u'<td class="style1">'+obj.val2html(val)+u'</td>'
                 total+=val
-            now   = datetime.now()
+            now   = datetime.now().date()
             debut = now
             fin   = now
             for m in obj.get_mois():
@@ -476,13 +476,7 @@ class IsSuiviBudget(models.Model):
         mois=[]
         for obj in self:
             for m in obj.mois_ids:
-                print(obj,m)
-                m.ca_budget_html       = self.val2html(m.ca_budget)
-                m.re_previsionnel_html = self.val2htmlcolor(m.re_previsionnel)
-                m.re_realise_html      = self.val2htmlcolor(m.re_realise)
-                m.part_achat_html      = self.val2htmlcolor(m.part_achat)
-                m.objectif_ca_sud_html = self.val2html(m.objectif_ca_sud)
-                mois.append(m)
+                 mois.append(m)
         return mois
 
 
@@ -524,7 +518,8 @@ class IsSuiviBudget(models.Model):
         r={}
         for obj in self:
             for m in obj.mois_ids:
-                d = datetime.strptime(m.mois, '%Y-%m-%d')
+                #d = datetime.strptime(m.mois, '%Y-%m-%d')
+                d = m.mois
                 r['debut'] = d - timedelta(days=d.day-1)
                 r['fin']   = r['debut'] + relativedelta(years=1)
                 return r
@@ -615,13 +610,13 @@ class IsSuiviBudget(models.Model):
         SQL="""
             SELECT
                 sum(ai.amount_untaxed)
-            FROM account_invoice ai inner join res_partner rp on ai.partner_id=rp.id
+            FROM account_move ai inner join res_partner rp on ai.partner_id=rp.id
                                left outer join is_groupe_client igc on rp.id=igc.id
             WHERE 
-                ai.date_invoice>='"""+str(periode['debut'])+"""' and
-                ai.date_invoice<'"""+str(periode['fin'])+"""' and
-                ai.type='out_invoice' and
-                ai.state in ('open','paid')
+                ai.invoice_date>='"""+str(periode['debut'])+"""' and
+                ai.invoice_date<'"""+str(periode['fin'])+"""' and
+                ai.move_type='out_invoice' and
+                ai.state='posted'
         """
         if secteur_activite_id:
             SQL=SQL+' and rp.is_secteur_activite_id='+str(secteur_activite_id)+' '
@@ -649,13 +644,13 @@ class IsSuiviBudget(models.Model):
         SQL="""
             SELECT
                 sum(ai.amount_untaxed)
-            FROM account_invoice ai inner join res_partner rp on ai.partner_id=rp.id
+            FROM account_move ai inner join res_partner rp on ai.partner_id=rp.id
                                     inner join is_region   ir on rp.is_region_id=ir.id
             WHERE 
-                ai.date_invoice>='"""+str(periode['debut'])+"""' and
-                ai.date_invoice<'"""+str(periode['fin'])+"""' and
-                ai.type='out_invoice' and
-                ai.state in ('open','paid') and
+                ai.invoice_date>='"""+str(periode['debut'])+"""' and
+                ai.invoice_date<'"""+str(periode['fin'])+"""' and
+                ai.move_type='out_invoice' and
+                ai.state='posted' and
                 ir.name in ('SE','SO') 
         """
         cr.execute(SQL)
@@ -674,12 +669,12 @@ class IsSuiviBudget(models.Model):
         SQL="""
             SELECT
                 sum(ai.amount_untaxed)/count(*)
-            FROM account_invoice ai
+            FROM account_move ai
             WHERE 
-                ai.date_invoice>='"""+str(debut)+"""' and
-                ai.date_invoice<'"""+str(fin)+"""' and
-                ai.type='out_invoice' and
-                ai.state in ('open','paid')
+                ai.invoice_date>='"""+str(debut)+"""' and
+                ai.invoice_date<'"""+str(fin)+"""' and
+                ai.move_type='out_invoice' and
+                ai.state='posted'
         """
         cr.execute(SQL)
         res = cr.fetchall()
@@ -696,13 +691,13 @@ class IsSuiviBudget(models.Model):
             periode = self.get_periode(m)
             SQL="""
                 SELECT count(*)
-                FROM account_invoice ai inner join res_partner rp on ai.partner_id=rp.id
+                FROM account_move ai inner join res_partner rp on ai.partner_id=rp.id
                                    left outer join is_region   ir on rp.is_region_id=ir.id
                 WHERE 
-                    ai.date_invoice>='"""+str(periode['debut'])+"""' and
-                    ai.date_invoice<'"""+str(periode['fin'])+"""' and
-                    ai.type='out_invoice' and
-                    ai.state in ('open','paid') and
+                    ai.invoice_date>='"""+str(periode['debut'])+"""' and
+                    ai.invoice_date<'"""+str(periode['fin'])+"""' and
+                    ai.move_type='out_invoice' and
+                    ai.state='posted' and
                     ai.amount_untaxed>="""+str(mini)+""" and
                     ai.amount_untaxed<"""+str(maxi)+"""
             """
@@ -737,7 +732,7 @@ class IsSuiviBudget(models.Model):
         periode = self.get_periode(m)
         #Prise en compte du retard de 90 jours
         debut = periode['debut']
-        if debut<=datetime.now():
+        if debut<=datetime.now().date():
             debut = debut - timedelta(days=90)
         val = 0
         SQL="""
@@ -773,7 +768,7 @@ class IsSuiviBudget(models.Model):
         cr = self._cr
         for obj in self:
             periode = self.get_periode(m)
-            now = datetime.now()
+            now = datetime.now().date()
             debut = periode['debut']
             fin   = periode['fin']
             val = 0
@@ -810,14 +805,48 @@ class IsSuiviBudgetMois(models.Model):
     objectif_ca_sud = fields.Integer("Objectif CA Sud Ouest et Sud Est")
 
 
+
+
+    @api.depends('ca_budget')
+    def _compute_ca_budget_html(self):
+        for obj in self:
+            print("##",obj.ca_budget)
+            obj.ca_budget_html =  self.env['is.suivi.budget'].val2html(obj.ca_budget)
+
+    @api.depends('re_previsionnel')
+    def _compute_re_previsionnel_html(self):
+        for obj in self:
+            obj.re_previsionnel_html = self.env['is.suivi.budget'].val2htmlcolor(obj.re_previsionnel)
+
+    @api.depends('re_realise')
+    def _compute_re_realise_html(self):
+        for obj in self:
+            obj.re_realise_html = self.env['is.suivi.budget'].val2htmlcolor(obj.re_realise)
+
+    @api.depends('part_achat')
+    def _compute_part_achat_html(self):
+        for obj in self:
+            obj.part_achat_html = self.env['is.suivi.budget'].val2htmlcolor(obj.part_achat)
+
+    @api.depends('objectif_ca_sud')
+    def _compute_objectif_ca_sud_html(self):
+        for obj in self:
+            obj.objectif_ca_sud_html = self.env['is.suivi.budget'].val2html(obj.objectif_ca_sud)
+
+
     # TODO : Avec Odoo 15, il semble necessaire de créer ces champs
-    # ca_budget_html       = fields.Char("CA Budget")
-    # re_previsionnel_html = fields.Char("RE prévisionnel en valeur")
-    # re_realise_html      = fields.Char("RE réalisé en valeur")
-    # part_achat_html      = fields.Char("Part achats dans CA")
-    # objectif_ca_sud_html = fields.Char("Objectif CA Sud Ouest et Sud Est")
+    ca_budget_html       = fields.Char("CA Budget HTML"                       , compute='_compute_ca_budget_html')
+    re_previsionnel_html = fields.Char("RE prévisionnel en valeur HTML"       , compute='_compute_re_previsionnel_html')
+    re_realise_html      = fields.Char("RE réalisé en valeur HTML"            , compute='_compute_re_realise_html')
+    part_achat_html      = fields.Char("Part achats dans CA HTML"             , compute='_compute_part_achat_html')
+    objectif_ca_sud_html = fields.Char("Objectif CA Sud Ouest et Sud Est HTML", compute='_compute_objectif_ca_sud_html')
 
 
+                # m.ca_budget_html       = self.val2html(m.ca_budget)
+                # m.re_previsionnel_html = self.val2htmlcolor(m.re_previsionnel)
+                # m.re_realise_html      = self.val2htmlcolor(m.re_realise)
+                # m.part_achat_html      = self.val2htmlcolor(m.part_achat)
+                # m.objectif_ca_sud_html = self.val2html(m.objectif_ca_sud)
 
 
 
