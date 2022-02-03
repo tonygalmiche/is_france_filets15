@@ -35,8 +35,8 @@ class IsSuiviBudget(models.Model):
                     rp.name,
                     ir.name,
                     io.name,
-                    ai.date_invoice,
-                    ai.number,
+                    ai.invoice_date,
+                    ai.name,
                     ai.amount_untaxed,
                     ai.partner_id
                 FROM account_move ai inner join res_partner     rp on ai.partner_id=rp.id
@@ -48,7 +48,7 @@ class IsSuiviBudget(models.Model):
                     ai.move_type='out_invoice' and
                     ai.state='posted' and
                     ai.amount_untaxed>0
-                ORDER BY ai.number desc
+                ORDER BY ai.name desc
             """
             cr.execute(SQL)
             res = cr.fetchall()

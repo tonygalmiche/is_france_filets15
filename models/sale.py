@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from odoo import api, fields, models
+from odoo import api, fields, models, tools
 from datetime import datetime, timedelta
 from odoo.exceptions import Warning
-# import os
+from odoo.http import request
+import os
+import base64
+
 # import unicodedata
-# from pyPdf import PdfFileWriter, PdfFileReader
+#from pyPdf import PdfFileWriter, PdfFileReader
 # import tempfile
-# from shutil import copy
+from shutil import copy
 # from contextlib import closing
 # import os.path
 
@@ -736,7 +739,7 @@ class IsCreationPlanning(models.Model):
                         if order:
                             vals={
                                 'planning_id' : obj.id,
-                                'date'        : date,
+                                'date'        : d,
                                 'order_id'    : order_id,
                                 'equipe_id'   : equipe.id,
                                 'nom_chantier': order.is_nom_chantier,
@@ -745,6 +748,10 @@ class IsCreationPlanning(models.Model):
                                 'etat'        : planning.etat,
                                 'message'     : message,
                             }
+
+
+                            print(d,date,vals)
+
                             self.env['is.creation.planning.preparation'].create(vals)
 
 
@@ -865,19 +872,30 @@ class IsCreationPlanning(models.Model):
             equipe_id=obj.equipe_id.id
             for planning in plannings:
                 obj.equipe_id=planning.equipe_id.id
-                pdf = self.env['report'].get_pdf([obj.id], 'is_france_filets.is_planning_report')
+                #pdf = self.env['report'].get_pdf([obj.id], 'is_france_filets15.is_planning_report')
+
+
+
+                pdf = request.env.ref('is_france_filets15.is_planning_reports').sudo()._render_qweb_pdf([obj.id])[0]
+
+                #pdf, _ = request.env.ref('sale.action_report_saleorder').sudo()._render_qweb_pdf([sale_order_id])
+
+
                 model=planning._name
                 name='planning.pdf'
                 attachment_obj = self.env['ir.attachment']
                 attachments = attachment_obj.search([('res_model','=',model),('res_id','=',planning.id),('name','=',name)])
                 vals = {
                     'name':        name,
-                    'datas_fname': name,
+                    #'datas_fname': name,
                     'type':        'binary',
                     'res_model':   model,
                     'res_id':      planning.id,
-                    'datas':       pdf.encode('base64'),
+                    #'datas':       pdf.encode('base64'),
+                    #'datas':       pdf,
+                    'datas':       base64.b64encode(pdf),
                 }
+                print(model,planning,name)
                 if attachments:
                     for attachment in attachments:
                         attachment.write(vals)
@@ -903,6 +921,7 @@ class IsCreationPlanning(models.Model):
 
 class IsPlanningPDF(models.Model):
     _name='is.planning.pdf'
+    _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
     _description = "IsPlanningPDF"
     _order='name desc'
 
@@ -931,29 +950,29 @@ class IsPlanning(models.Model):
     chantier_ids         = fields.One2many('is.planning.line', 'planning_id', u"Chantiers")
 
 
-    def _merge_pdf(self, documents):
-        """Merge PDF files into one.
-        :param documents: list of path of pdf files
-        :returns: path of the merged pdf
-        """
-        writer = PdfFileWriter()
-        streams = []  # We have to close the streams *after* PdfFilWriter's call to write()
-        for document in documents:
-            pdfreport = file(document, 'rb')
-            streams.append(pdfreport)
-            reader = PdfFileReader(pdfreport)
-            for page in range(0, reader.getNumPages()):
-                writer.addPage(reader.getPage(page))
-        merged_file_fd, merged_file_path = tempfile.mkstemp(suffix='.pdf', prefix='report.merged.tmp.')
-        with closing(os.fdopen(merged_file_fd, 'w')) as merged_file:
-            writer.write(merged_file)
-        for stream in streams:
-            stream.close()
-        return merged_file_path
+    # def _merge_pdf(self, documents):
+    #     """Merge PDF files into one.
+    #     :param documents: list of path of pdf files
+    #     :returns: path of the merged pdf
+    #     """
+    #     writer = PdfFileWriter()
+    #     streams = []  # We have to close the streams *after* PdfFilWriter's call to write()
+    #     for document in documents:
+    #         pdfreport = file(document, 'rb')
+    #         streams.append(pdfreport)
+    #         reader = PdfFileReader(pdfreport)
+    #         for page in range(0, reader.getNumPages()):
+    #             writer.addPage(reader.getPage(page))
+    #     merged_file_fd, merged_file_path = tempfile.mkstemp(suffix='.pdf', prefix='report.merged.tmp.')
+    #     with closing(os.fdopen(merged_file_fd, 'w')) as merged_file:
+    #         writer.write(merged_file)
+    #     for stream in streams:
+    #         stream.close()
+    #     return merged_file_path
 
 
     def generer_planning_pdf_action(self):
-        cr , uid, context = self.env.args
+        cr,uid,context,su = self.env.args
         db = self._cr.dbname
         path="/tmp/planning-"+str(uid)
         cde="rm -Rf " + path
@@ -964,6 +983,9 @@ class IsPlanning(models.Model):
         for obj in self:
             # ** Ajout des plannings ******************************************
             filestore = os.environ.get('HOME')+"/.local/share/Odoo/filestore/"+db+"/"
+            data_dir = tools.config['data_dir']
+            if data_dir:
+                filestore=data_dir+"/filestore/"+db+"/"
             filtre=[
                 ('name','=','planning.pdf'),
                 ('res_model','=','is.planning'),
@@ -971,23 +993,40 @@ class IsPlanning(models.Model):
             
             ]
             attachments = self.env['ir.attachment'].search(filtre,limit=1)
+
+            print(attachments)
+
             for attachment in attachments:
                 src = filestore+attachment.store_fname
                 dst = path+"/"+str(attachment.id)+".pdf"
+
+                print(src,dst)
+
+
                 if os.path.exists(src):
                     copy(src, dst)
                     paths.append(dst)
             # *****************************************************************
 
         # ** Merge des PDF *************************************************
+        path_merged = path+"/pdf_merged.pdf"
         try:
-           path_merged=self.env['is.planning']._merge_pdf(paths)
+            #path_merged=self.env['is.planning']._merge_pdf(paths)
+            #TODO : Mettre ici la commande merge : pdftk 1.pdf 2.pdf 3.pdf cat output 123.pdf
+
+
+            cmd="pdftk "+" ".join(paths)+" cat output "+path_merged
+            print(cmd)
+            os.system(cmd)
+
+            print("## TEST ##")
         except:
            raise Warning(u"Impossible de générer le PDF")
-        pdfs = open(path_merged,'rb').read().encode('base64')
+        pdfs = open(path_merged,'rb').read()
+        pdfs = base64.b64encode(pdfs)
         # ******************************************************************
 
- 
+
         # ** Creation ou modification du planning PDF **********************
         planning_pdf_obj = self.env['is.planning.pdf']
         name = 'plannings.pdf'
@@ -1019,7 +1058,7 @@ class IsPlanning(models.Model):
         # ** Creation ou modification de la pièce jointe *******************
         vals = {
             'name'       : name,
-            'datas_fname': name,
+            #'datas_fname': name,
             'type'       : 'binary',
             'datas'      : pdfs,
             'res_model'  : 'is.planning.pdf',
@@ -1034,14 +1073,14 @@ class IsPlanning(models.Model):
             attachment_id=attachment.id
         #******************************************************************
 
-        #** Envoi du PDF mergé dans le navigateur *************************
-        if attachment_id:
-            return {
-                'type' : 'ir.actions.act_url',
-                'url': '/web/binary/saveas?model=ir.attachment&field=datas&id='+str(attachment_id)+'&filename_field=name',
-                'target': 'new',
-            }
-        #******************************************************************
+        # #** Envoi du PDF mergé dans le navigateur *************************
+        # if attachment_id:
+        #     return {
+        #         'type' : 'ir.actions.act_url',
+        #         'url': '/web/binary/saveas?model=ir.attachment&field=datas&id='+str(attachment_id)+'&filename_field=name',
+        #         'target': 'new',
+        #     }
+        # #******************************************************************
 
 
 
