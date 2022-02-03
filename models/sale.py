@@ -2,17 +2,18 @@
 
 from odoo import api, fields, models, tools
 from datetime import datetime, timedelta
-from odoo.exceptions import Warning
+#from odoo.exceptions import Warning
+
+from odoo.exceptions import UserError
+
+
 from odoo.http import request
 import os
 import base64
-
-# import unicodedata
-#from pyPdf import PdfFileWriter, PdfFileReader
-# import tempfile
 from shutil import copy
-# from contextlib import closing
-# import os.path
+import subprocess
+import logging
+_logger = logging.getLogger(__name__)
 
 
 _ETAT_PLANNING=[
@@ -1010,21 +1011,19 @@ class IsPlanning(models.Model):
 
         # ** Merge des PDF *************************************************
         path_merged = path+"/pdf_merged.pdf"
-        try:
-            #path_merged=self.env['is.planning']._merge_pdf(paths)
-            #TODO : Mettre ici la commande merge : pdftk 1.pdf 2.pdf 3.pdf cat output 123.pdf
-
-
-            cmd="pdftk "+" ".join(paths)+" cat output "+path_merged
-            print(cmd)
-            os.system(cmd)
-
-            print("## TEST ##")
-        except:
-           raise Warning(u"Impossible de générer le PDF")
+        cmd="pdftk "+" ".join(paths)+" cat output "+path_merged+" 2>&1"
+        _logger.info(cmd)
+        stream = os.popen(cmd)
+        res = stream.read()
+        _logger.info("res pdftk = %s",res)
+        if not os.path.exists(path_merged):
+            raise UserError("PDF non généré\ncmd=%s"%(cmd))
         pdfs = open(path_merged,'rb').read()
         pdfs = base64.b64encode(pdfs)
         # ******************************************************************
+
+
+
 
 
         # ** Creation ou modification du planning PDF **********************
