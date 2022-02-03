@@ -1011,7 +1011,7 @@ class IsPlanning(models.Model):
 
         # ** Merge des PDF *************************************************
         path_merged = path+"/pdf_merged.pdf"
-        cmd="pdftk "+" ".join(paths)+" cat output "+path_merged+" 2>&1"
+        cmd="export _JAVA_OPTIONS='-Xms16m -Xmx64m' && pdftk "+" ".join(paths)+" cat output "+path_merged+" 2>&1"
         _logger.info(cmd)
         stream = os.popen(cmd)
         res = stream.read()
