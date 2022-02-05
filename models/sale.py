@@ -749,13 +749,7 @@ class IsCreationPlanning(models.Model):
                                 'etat'        : planning.etat,
                                 'message'     : message,
                             }
-
-
-                            print(d,date,vals)
-
                             self.env['is.creation.planning.preparation'].create(vals)
-
-
 
             #** Création des plannings pour chaque équipe **********************
             equipes = obj.get_equipes()
@@ -896,7 +890,6 @@ class IsCreationPlanning(models.Model):
                     #'datas':       pdf,
                     'datas':       base64.b64encode(pdf),
                 }
-                print(model,planning,name)
                 if attachments:
                     for attachment in attachments:
                         attachment.write(vals)
@@ -994,16 +987,9 @@ class IsPlanning(models.Model):
             
             ]
             attachments = self.env['ir.attachment'].search(filtre,limit=1)
-
-            print(attachments)
-
             for attachment in attachments:
                 src = filestore+attachment.store_fname
                 dst = path+"/"+str(attachment.id)+".pdf"
-
-                print(src,dst)
-
-
                 if os.path.exists(src):
                     copy(src, dst)
                     paths.append(dst)
