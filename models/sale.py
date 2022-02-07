@@ -195,8 +195,10 @@ class IsSaleOrderPlanning(models.Model):
         avertissements=False
         for obj in self:
             if obj.equipe_ids and obj.date_debut and obj.date_fin:
-                d1=datetime.strptime(obj.date_debut, '%Y-%m-%d')
-                d2=datetime.strptime(obj.date_fin, '%Y-%m-%d')
+                #d1=datetime.strptime(obj.date_debut, '%Y-%m-%d')
+                #d2=datetime.strptime(obj.date_fin, '%Y-%m-%d')
+                d1=obj.date_debut
+                d2=obj.date_fin
                 jours=(d2-d1).days+1
                 for d in range(0, jours):
                     for equipe in obj.equipe_ids:
@@ -208,7 +210,10 @@ class IsSaleOrderPlanning(models.Model):
                                 avertissements=res
                     d1=d1+timedelta(days=1)
         if avertissements: 
-            raise Warning('\n'.join(avertissements))
+            raise UserError('\n'.join(avertissements))
+
+
+
 
 
 class SaleOrder(models.Model):
@@ -458,13 +463,17 @@ class IsCreationPlanning(models.Model):
         cr = self._cr
         d=datetime.strptime(date, '%d/%m/%Y')
         absence=False
+        if isinstance(equipe.id, int):
+            equipe_id = equipe.id
+        else:
+            equipe_id = equipe._origin.id
         SQL="""
             SELECT iea.motif 
             FROM is_equipe_absence iea
             WHERE 
                 iea.date_debut<='"""+str(d)+"""' and 
                 iea.date_fin>='"""+str(d)+"""' and
-                iea.equipe_id="""+str(equipe.id)+"""
+                iea.equipe_id="""+str(equipe_id)+"""
         """
         cr.execute(SQL)
         res = cr.fetchall()
@@ -522,6 +531,12 @@ class IsCreationPlanning(models.Model):
         cr = self._cr
         d=datetime.strptime(date, '%d/%m/%Y')
         chantiers=[]
+
+        if isinstance(equipe.id, int):
+            equipe_id = equipe.id
+        else:
+            equipe_id = equipe._origin.id
+
         SQL="""
             SELECT
                 so.name,
@@ -541,7 +556,7 @@ class IsCreationPlanning(models.Model):
             WHERE 
                 isop.date_debut<='"""+str(d)+"""' and 
                 isop.date_fin>='"""+str(d)+"""' and
-                ie.id="""+str(equipe.id)+"""
+                ie.id="""+str(equipe_id)+"""
         """
         cr.execute(SQL)
         res = cr.fetchall()
@@ -655,15 +670,7 @@ class IsCreationPlanning(models.Model):
                 ('pose_depose','=','pose'),
                 ('sms_heure','=',False),
             ])
-
-
-            print(lines)
-
-
             for line in lines:
-
-                print(line)
-
                 order = line.order_id
                 mobile = order.is_contact_id.mobile or order.is_contact_id.phone
                 mobile,err = self._format_mobile(mobile)
@@ -691,9 +698,6 @@ class IsCreationPlanning(models.Model):
                         '&message='+message
                     cde = 'curl --data "'+param+'" https://www.ovh.com/cgi-bin/sms/http2sms.cgi'
                     res=os.popen(cde).readlines()
-
-                    print(cde,res)
-
                     if len(res)>=2:
                         if res[0].strip()=='OK':
                             err='OK'
