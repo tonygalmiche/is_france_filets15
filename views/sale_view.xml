@@ -20,8 +20,13 @@
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form" />
             <field name="arch" type="xml">
-                <xpath expr="//sheet" position="attributes">
-                    <attribute name="class">oe_form_sheet_width_wider</attribute>
+
+                <xpath expr="//sheet[1]" position="inside">
+                    <style>
+                        .o_form_view .o_form_sheet_bg > .o_form_sheet{
+                            max-width: 1800px;
+                        }
+                    </style>
                 </xpath>
                 <field name="partner_id" position="after">
                     <field name="is_type_partenaire"/>
@@ -612,11 +617,13 @@
                             name="mail_planning_action"
                             type="object"
                             string="Envoyer le mail"
+                            confirm="Confirmer l'envoi du mail ?"
                         />
                         <button
                             name="sms_planning_action"
                             type="object"
                             string="Envoyer les SMS"
+                            confirm="Confirmer l'envoi des SMS ?"
                         />
                     </header>
                     <sheet>
@@ -850,7 +857,12 @@
             <field name="model">is.chantier</field>
             <field name="arch" type="xml">
                 <form create="0">
-                    <sheet class="oe_form_sheet_width_wider">
+                    <sheet>
+                        <style>
+                            .o_form_view .o_form_sheet_bg > .o_form_sheet{
+                                max-width: 1800px;
+                            }
+                        </style>
                         <group string="Références du chantier">
                             <group>
                                 <field name="name"/>
@@ -875,9 +887,9 @@
                                     <field name="equipe_ids" widget="many2many_tags"/>
                                     <field name="pose_depose"/>
                                     <field name="etat"/>
-                                    <button string="Actualiser la liste des filets pour ce chantier" name="actualiser_filets_action" type="object" icon="fa-refresh"/>
+                                    <button title="Actualiser la liste des filets pour ce chantier" name="actualiser_filets_action" type="object" icon="fa-refresh"/>
                                     <field name="realisation"/>
-                                    <button string="Saisie du PV" name="saisie_pv_action" type="object" icon="fa-search-plus"/>
+                                    <button title="Saisie du PV" name="saisie_pv_action" type="object" icon="fa-search-plus"/>
                                 </tree>
                             </field>
                         </group>

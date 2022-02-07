@@ -142,7 +142,7 @@ class IsSaleOrderPlanning(models.Model):
     order_id       = fields.Many2one('sale.order', 'Commande', required=True, ondelete='cascade', readonly=True,index=True)
     date_debut     = fields.Date(u'Date début',index=True)
     date_fin       = fields.Date(u'Date fin')
-    commentaire    = fields.Char('Commentaire planning')
+    commentaire    = fields.Text('Commentaire planning')
     equipe_ids     = fields.Many2many('is.equipe','is_sale_order_planning_equipe_rel','order_id','equipe_id', string="Equipes")
     pose_depose    = fields.Selection([
         ('pose'  , 'Pose'),
@@ -585,13 +585,11 @@ class IsCreationPlanning(models.Model):
         """Mail du planning"""
         mails=[]
         for obj in self:
-
             for planning in obj.planning_ids:
                 mail=planning.equipe_id.user_id.partner_id.email
                 if mail and mail not in mails:
                     mails.append(mail)
             email_to=','.join(mails)
-
             subject=u'Planning du '+str(obj.date_debut)+u' au '+str(obj.date_fin)
             user  = self.env['res.users'].browse(self._uid)
             email_from = user.email
@@ -612,6 +610,7 @@ class IsCreationPlanning(models.Model):
             email=self.env['mail.mail'].create(vals)
             if email:
                 self.env['mail.mail'].send(email)
+
 
     def _format_mobile(self,mobile):
         err=''
@@ -634,7 +633,7 @@ class IsCreationPlanning(models.Model):
 
     def sms_planning_action(self):
         """SMS du planning"""
-        cr , uid, context = self.env.args
+        cr,uid,context,su = self.env.args
         #Offset à prendre pour tenir compte des jours ouvrés
         offsets={
             0: 3, #Lundi
@@ -656,7 +655,15 @@ class IsCreationPlanning(models.Model):
                 ('pose_depose','=','pose'),
                 ('sms_heure','=',False),
             ])
+
+
+            print(lines)
+
+
             for line in lines:
+
+                print(line)
+
                 order = line.order_id
                 mobile = order.is_contact_id.mobile or order.is_contact_id.phone
                 mobile,err = self._format_mobile(mobile)
@@ -684,6 +691,9 @@ class IsCreationPlanning(models.Model):
                         '&message='+message
                     cde = 'curl --data "'+param+'" https://www.ovh.com/cgi-bin/sms/http2sms.cgi'
                     res=os.popen(cde).readlines()
+
+                    print(cde,res)
+
                     if len(res)>=2:
                         if res[0].strip()=='OK':
                             err='OK'
@@ -1081,7 +1091,7 @@ class IsChantierPlanning(models.Model):
     sale_order_planning_id = fields.Many2one('is.sale.order.planning', u"Ligne planning commande", readonly=True,index=True)
     date_debut             = fields.Date(u'Date début', readonly=True,index=True)
     date_fin               = fields.Date(u'Date fin', readonly=True)
-    commentaire            = fields.Char(u'Commentaire planning', readonly=True)
+    commentaire            = fields.Text(u'Commentaire planning', readonly=True)
     equipe_ids             = fields.Many2many('is.equipe','is_chantier_planning_equipe_rel','chantier_id','equipe_id', string=u"Equipes", readonly=True)
     pose_depose            = fields.Selection([
         ('pose'  , 'Pose'),
