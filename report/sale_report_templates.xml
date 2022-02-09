@@ -16,7 +16,7 @@
                         <h1 style="font-size:16pt">
                             <span t-if="doc.state not in ['draft','sent']">Commande </span>
                             <span t-if="doc.state in ['draft','sent']">Devis </span>
-                            <span t-field="doc.name"/> du <span t-field="doc.date_order"  t-options="{'widget': 'datetime', 'format': 'dd/mm/YYYY'}"/>
+                            <span t-field="doc.name"/> du <span t-field="doc.date_order"  t-options="{'widget': 'datetime', 'format': 'dd/MM/YYYY'}"/>
                         </h1>
                     </div>
                     <div class="col-5">
