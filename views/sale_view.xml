@@ -83,8 +83,9 @@
                                     <field name="etat"/>
                                     <field name="realisation"/>
                                     <field name="pv_realise"   readonly="1"/>
-                                    <field name="sms_heure"    readonly="1" string="SMS"/>
-                                    <field name="sms_resultat" readonly="1" string="Err"/>
+                                    <field name="sms_heure"    readonly="1" string="SMS" optional="show"/>
+                                    <field name="sms_resultat" readonly="1" string="Err" optional="show"/>
+                                    <field name="alerte"                                 optional="show"/>
                                 </tree>
                             </field>
                         </group>

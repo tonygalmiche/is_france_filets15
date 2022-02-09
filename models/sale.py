@@ -139,6 +139,53 @@ class IsSaleOrderPlanning(models.Model):
     _description = "IsSaleOrderPlanning"
     _order='order_id,date_debut'
 
+
+
+    # @api.onchange('date_debut','date_fin','equipe_ids')
+    # def onchange_date(self):
+    #     avertissements=False
+    #     for obj in self:
+    #         if obj.equipe_ids and obj.date_debut and obj.date_fin:
+    #             #d1=datetime.strptime(obj.date_debut, '%Y-%m-%d')
+    #             #d2=datetime.strptime(obj.date_fin, '%Y-%m-%d')
+    #             d1=obj.date_debut
+    #             d2=obj.date_fin
+    #             jours=(d2-d1).days+1
+    #             for d in range(0, jours):
+    #                 for equipe in obj.equipe_ids:
+    #                     res=self.get_avertissements(obj,equipe,d1)
+    #                     if res:
+    #                         if avertissements:
+    #                             avertissements.extend(res)
+    #                         else:
+    #                             avertissements=res
+    #                 d1=d1+timedelta(days=1)
+    #     if avertissements: 
+    #         raise UserError('\n'.join(avertissements))
+
+
+    @api.depends('date_debut','date_fin','equipe_ids')
+    def _compute_alerte(self):
+        for obj in self:
+            avertissements=False
+            if obj.equipe_ids and obj.date_debut and obj.date_fin:
+                d1=obj.date_debut
+                d2=obj.date_fin
+                jours=(d2-d1).days+1
+                for d in range(0, jours):
+                    for equipe in obj.equipe_ids:
+                        res=self.get_avertissements(obj,equipe,d1)
+                        if res:
+                            if avertissements:
+                                avertissements.extend(res)
+                            else:
+                                avertissements=res
+                    d1=d1+timedelta(days=1)
+            if avertissements:
+                avertissements="\n".join(avertissements)
+            obj.alerte = avertissements
+
+
     order_id       = fields.Many2one('sale.order', 'Commande', required=True, ondelete='cascade', readonly=True,index=True)
     date_debut     = fields.Date(u'Date début',index=True)
     date_fin       = fields.Date(u'Date fin')
@@ -157,6 +204,7 @@ class IsSaleOrderPlanning(models.Model):
     sms_message  = fields.Text(u"Message")
     sms_resultat = fields.Char(u"Résultat")
     sms_quota    = fields.Integer(u"Quota OVH")
+    alerte       = fields.Text(u"Alerte", compute='_compute_alerte', readonly=True)
 
 
     def onchange_dates(self,date_debut,date_fin):
@@ -188,30 +236,6 @@ class IsSaleOrderPlanning(models.Model):
         #*******************************************************
 
         return avertissements
-
-
-    # @api.onchange('date_debut','date_fin','equipe_ids')
-    # def onchange_date(self):
-    #     avertissements=False
-    #     for obj in self:
-    #         if obj.equipe_ids and obj.date_debut and obj.date_fin:
-    #             #d1=datetime.strptime(obj.date_debut, '%Y-%m-%d')
-    #             #d2=datetime.strptime(obj.date_fin, '%Y-%m-%d')
-    #             d1=obj.date_debut
-    #             d2=obj.date_fin
-    #             jours=(d2-d1).days+1
-    #             for d in range(0, jours):
-    #                 for equipe in obj.equipe_ids:
-    #                     res=self.get_avertissements(obj,equipe,d1)
-    #                     if res:
-    #                         if avertissements:
-    #                             avertissements.extend(res)
-    #                         else:
-    #                             avertissements=res
-    #                 d1=d1+timedelta(days=1)
-    #     if avertissements: 
-    #         raise UserError('\n'.join(avertissements))
-
 
 
 
