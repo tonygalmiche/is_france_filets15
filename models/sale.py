@@ -190,27 +190,27 @@ class IsSaleOrderPlanning(models.Model):
         return avertissements
 
 
-    @api.onchange('date_debut','date_fin','equipe_ids')
-    def onchange_date(self):
-        avertissements=False
-        for obj in self:
-            if obj.equipe_ids and obj.date_debut and obj.date_fin:
-                #d1=datetime.strptime(obj.date_debut, '%Y-%m-%d')
-                #d2=datetime.strptime(obj.date_fin, '%Y-%m-%d')
-                d1=obj.date_debut
-                d2=obj.date_fin
-                jours=(d2-d1).days+1
-                for d in range(0, jours):
-                    for equipe in obj.equipe_ids:
-                        res=self.get_avertissements(obj,equipe,d1)
-                        if res:
-                            if avertissements:
-                                avertissements.extend(res)
-                            else:
-                                avertissements=res
-                    d1=d1+timedelta(days=1)
-        if avertissements: 
-            raise UserError('\n'.join(avertissements))
+    # @api.onchange('date_debut','date_fin','equipe_ids')
+    # def onchange_date(self):
+    #     avertissements=False
+    #     for obj in self:
+    #         if obj.equipe_ids and obj.date_debut and obj.date_fin:
+    #             #d1=datetime.strptime(obj.date_debut, '%Y-%m-%d')
+    #             #d2=datetime.strptime(obj.date_fin, '%Y-%m-%d')
+    #             d1=obj.date_debut
+    #             d2=obj.date_fin
+    #             jours=(d2-d1).days+1
+    #             for d in range(0, jours):
+    #                 for equipe in obj.equipe_ids:
+    #                     res=self.get_avertissements(obj,equipe,d1)
+    #                     if res:
+    #                         if avertissements:
+    #                             avertissements.extend(res)
+    #                         else:
+    #                             avertissements=res
+    #                 d1=d1+timedelta(days=1)
+    #     if avertissements: 
+    #         raise UserError('\n'.join(avertissements))
 
 
 
