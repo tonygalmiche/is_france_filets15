@@ -131,7 +131,7 @@
                     <tr style="height:25mm">
                         <td>Visa</td>
                         <td style="text-align:center">
-                            <img t-att-src="'/is_france_filets/static/img/signature.png'" style="max-height: 35mm;"/>
+                            <img t-att-src="'/is_france_filets15/static/img/signature.png'" style="max-height: 35mm;"/>
                         </td>
                         <td></td>
                         <td></td>
