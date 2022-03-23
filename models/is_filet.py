@@ -48,11 +48,7 @@ class is_filet(models.Model):
 
     @api.model
     def create(self, vals):
-        data_obj = self.env['ir.model.data']
-        sequence_ids = data_obj.search([('name','=','is_filet_seq')])
-        if sequence_ids:
-            sequence_id = data_obj.browse(sequence_ids[0].id).res_id
-            vals['name'] = self.env['ir.sequence'].get_id(sequence_id, 'id')
+        vals['name'] = self.env['ir.sequence'].next_by_code('is.filet')
         res = super(is_filet, self).create(vals)
         return res
 

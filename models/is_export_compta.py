@@ -34,13 +34,10 @@ class is_export_compta(models.Model):
 
     @api.model
     def create(self, vals):
-        data_obj = self.env['ir.model.data']
-        sequence_ids = data_obj.search([('name','=','is_export_compta_seq')])
-        if sequence_ids:
-            sequence_id = data_obj.browse(sequence_ids[0].id).res_id
-            vals['name'] = self.env['ir.sequence'].get_id(sequence_id, 'id')
+        vals['name'] = self.env['ir.sequence'].next_by_code('is.export.compta')
         res = super(is_export_compta, self).create(vals)
         return res
+
 
     def generer_lignes_action(self):
         cr=self._cr
