@@ -708,7 +708,7 @@ class IsCreationPlanning(models.Model):
                     message = message.replace('[date_debut]',date_fin.strftime('%d/%m/%Y'))
                     message = message.replace('\n',' ')
                     #message = unicode(message,'utf-8')
-                    message = unicodedata.normalize('NFD', message).encode('ascii', 'ignore')
+                    #message = unicodedata.normalize('NFD', message).encode('ascii', 'ignore')
                     if company.is_sms_mobile:
                         to,err2 = self._format_mobile(company.is_sms_mobile)
                     else:
