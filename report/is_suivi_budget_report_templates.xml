@@ -55,6 +55,16 @@
                         padding-right: 1em;
                         white-space: nowrap;
                     }
+                    .style2{
+                        font-size:11pt;
+                        font-weight: bold;
+                        text-align: right;
+                        padding-right: 1em;
+                        white-space: nowrap;
+                    }
+
+
+
                 </style>
                 <h1><span t-field="o.name"/> imprimé le <t t-raw="o.get_now()"/></h1>
                 <div t-raw="o.get_html()"/>

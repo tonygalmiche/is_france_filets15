@@ -373,7 +373,9 @@ class IsSuiviBudget(models.Model):
                 html+=u'</tr>'
                 total_objectif+=c.objectif
 
-            html+=u'<tr><td>Total</td>'
+
+
+            html+=u'<tr><td class="titre">Total</td>'
             total = 0
             for m in obj.get_mois():
                 periode = self.get_periode(m)
@@ -381,16 +383,18 @@ class IsSuiviBudget(models.Model):
                     val1 = obj.get_ca_commande_ferme_top(m)
                     val2 = obj.get_ca_commande_ferme_groupe(m)
                     val=val1+val2
-                    html+=u'<td class="style1" style="background-color:LemonChiffon;"><b>'+obj.val2html(val)+u'</b></td>'
+                    html+=u'<td class="style2" style="background-color:LemonChiffon;"><b>'+obj.val2html(val)+u'</b></td>'
                 else:
                     val1 = obj.get_ca_realise_top(m)
                     val2 = obj.get_ca_realise_groupe(m)
                     val=val1+val2
-                    html+=u'<td class="style1"><b>'+obj.val2html(val)+u'</b></td>'
+                    html+=u'<td class="style2"><b>'+obj.val2html(val)+u'</b></td>'
                 total+=val
-            html+=u'<td class="style1"><b>'+obj.val2html(total)+u'</b></td>'
-            html+=u'<td class="style1"><b>'+obj.val2html(total_objectif)+u'</b></td>'
+            html+=u'<td class="titre-right"><b>'+obj.val2html(total)+u'</b></td>'
+            html+=u'<td class="titre-right"><b>'+obj.val2html(total_objectif)+u'</b></td>'
             html+=u'</tr>'
+
+
 
 
             html+=u'<tr><td class="titre">Autres clients</td>'
@@ -423,14 +427,14 @@ class IsSuiviBudget(models.Model):
 
 
             html+=u'<tr><td colspan="15" class="titre">Nouvelles affaires</td></tr>'
-            html+=u'<tr><td>En Valeur</td>'
+            html+=u'<tr><td class="titre">En Valeur</td>'
             total_nouvelles_affaires = 0
             for m in obj.get_mois():
                 val = obj.get_ca_realise_nouveau(m)
-                html+=u'<td class="style1">'+obj.val2html(val)+u'</td>'
+                html+=u'<td class="titre-right">'+obj.val2html(val)+u'</td>'
                 total_nouvelles_affaires+=val
-            html+=u'<td class="style1"><b>'+obj.val2html(total_nouvelles_affaires)+'</b></td>'
-            html+=u'<td class="style1"><b>'+obj.val2html(obj.objectif_new_affaire_val)+'</b></td>'
+            html+=u'<td class="titre-right"><b>'+obj.val2html(total_nouvelles_affaires)+'</b></td>'
+            html+=u'<td class="titre-right"><b>'+obj.val2html(obj.objectif_new_affaire_val)+'</b></td>'
             html+=u'</tr>'
 
             html+=u'<tr><td>En % du CA mensuel</td>'
