@@ -167,6 +167,12 @@
                     </div>
                 </div>
                 <hr />
+                <div class="row" t-if="doc.note">
+                    <div class="col-12">
+                        <div t-field="doc.note"/>
+                         <br />
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-12">
                         <b>Date et Signature :</b>
