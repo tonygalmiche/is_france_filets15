@@ -167,6 +167,13 @@
         action="is_equipe_action" 
     />
     <menuitem 
+        id="is_departement_menu" 
+        sequence="55" 
+        name="Département"
+        parent="is_ventes_table_menu" 
+        action="is_departement_action" 
+    />
+    <menuitem 
         id="is_motif_archivage_menu" 
         sequence="60" 
         name="Motif archivage devis"

@@ -2,11 +2,7 @@
 
 from odoo import api, fields, models, tools
 from datetime import datetime, timedelta
-#from odoo.exceptions import Warning
-
 from odoo.exceptions import UserError
-
-
 from odoo.http import request
 import os
 import base64
@@ -134,34 +130,82 @@ class IsEquipe(models.Model):
     message_ids = fields.One2many('is.equipe.message', 'equipe_id', u"Messages")
 
 
+    def get_absences(self):
+        dates=[]
+        for line in self.sudo().absence_ids:
+            d1=line.date_debut
+            d2=line.date_fin
+            jours=(d2-d1).days+1
+            for d in range(0, jours):
+                if d1 not in dates:
+                    dates.append(d1)
+                d1=d1+timedelta(days=1)
+        return dates
+
+
+    def test_dispo_planning(self, date):
+        """Retourne le nombre de fois ou l'équipe apparait sur le planning pour la date indiquée (si 0, alors l'équipe est dispo)"""
+        cr = self._cr
+        SQL="""
+            select p.id,p.date_debut,p.date_fin, p.commentaire
+            from is_sale_order_planning p join is_sale_order_planning_equipe_rel rel  on p.id=rel.order_id
+            where 
+                date_debut<=%s and 
+                date_fin>=%s and
+                rel.equipe_id=%s
+        """
+        cr.execute(SQL,[date,date,self.id])
+        res = cr.fetchall()
+        return len(res)
+
+
+class IsDepartement(models.Model):
+    _name='is.departement'
+    _description = "Département"
+    _order='name'
+
+    name        = fields.Char('Département', required=True)
+    equipe_ids  = fields.Many2many('is.equipe','is_departement_equipe_rel','departement_id','equipe_id', string="Equipes")
+
+
+    def get_dates(self,departement=False, limite=60):
+        dates=[]
+        if departement:
+            lines = self.env['is.departement'].search([('name','=',departement)])
+            for line in lines:
+                date = datetime.today().date()
+                if date not in dates:
+                    for equipe in line.equipe_ids:
+                        absences=equipe.get_absences()
+                        for x in range(0, limite):
+                            jour = date.isoweekday()
+                            if jour<6:
+                                res=equipe.test_dispo_planning(date)
+                                if res==0:
+                                    if date not in absences:
+                                        dates.append(date)
+                            date = date + timedelta(days=1)
+        return dates
+
+
+    def get_equipe(self, date=False):
+        if date:
+            for obj in self:
+                for equipe in obj.equipe_ids:
+                    absences=equipe.get_absences()
+                    jour = date.isoweekday()
+                    if jour<6:
+                        res=equipe.test_dispo_planning(date)
+                        if res==0:
+                            if date not in absences:
+                                return equipe
+        return False
+
+
 class IsSaleOrderPlanning(models.Model):
     _name='is.sale.order.planning'
     _description = "IsSaleOrderPlanning"
     _order='order_id,date_debut'
-
-
-
-    # @api.onchange('date_debut','date_fin','equipe_ids')
-    # def onchange_date(self):
-    #     avertissements=False
-    #     for obj in self:
-    #         if obj.equipe_ids and obj.date_debut and obj.date_fin:
-    #             #d1=datetime.strptime(obj.date_debut, '%Y-%m-%d')
-    #             #d2=datetime.strptime(obj.date_fin, '%Y-%m-%d')
-    #             d1=obj.date_debut
-    #             d2=obj.date_fin
-    #             jours=(d2-d1).days+1
-    #             for d in range(0, jours):
-    #                 for equipe in obj.equipe_ids:
-    #                     res=self.get_avertissements(obj,equipe,d1)
-    #                     if res:
-    #                         if avertissements:
-    #                             avertissements.extend(res)
-    #                         else:
-    #                             avertissements=res
-    #                 d1=d1+timedelta(days=1)
-    #     if avertissements: 
-    #         raise UserError('\n'.join(avertissements))
 
 
     @api.depends('date_debut','date_fin','equipe_ids')
@@ -401,6 +445,8 @@ class SaleOrder(models.Model):
 
     is_suivi    = fields.Integer(u'Suivi(%)' , help=u'Utilisé dans la gestion des offres')
     is_suivi_ht = fields.Integer(u'Suivi (€)', help=u'Utilisé dans la gestion des offres', compute='_compute_suivi_ht', readonly=True, store=True)
+    is_montant_regle_en_ligne = fields.Float('Montant réglé en ligne (€)', digits=(14,2))
+    is_utilisateur_reserve    = fields.Char("Utilisateur ayant réservé le chantier")
 
 
     def get_nacelles(self):
@@ -423,6 +469,105 @@ class SaleOrder(models.Model):
     def forcer_entierement_facture_action(self):
         for obj in self:
             obj.invoice_status = 'invoiced'
+
+
+
+
+    def create_akyos_order(self, code_client=False, departement=False, zone=False, tarif_ht=False, montant_paye=False, date_reservee=False, prestation=False,nom_chantier=False, utilisateur=False):
+        res={}
+        err=False
+        prestations={
+            1: "PRESTATION-01",
+            2: "PRESTATION-02",
+        }
+        err=False
+        if prestation not in prestations:
+            err="prestation inconnue ou non définie"
+        if not err:
+            code = prestations[prestation]
+            products = self.env['product.template'].search([('default_code','=',code)], limit=1)
+            if len(products):
+                product=products[0]
+            else:
+                err="prestation %s (%s) non trouvée dans Odoo"%(prestation,code)
+        if not err:
+            partners = self.env['res.partner'].search([('is_code_client_ebp','=',code_client)], limit=1)
+            if len(partners)==0:
+                err="Code client %s non trouvée dans Odoo"%(code_client)
+            else:
+                partner=partners[0]
+        if not err:
+            departements = self.env['is.departement'].search([('name','=',departement)], limit=1)
+            if len(departements)==0:
+                err="Département (%s) non trouvée dans Odoo"%(departement)
+            else:
+                departement=departements[0]
+                date=datetime.strptime(date_reservee, '%Y-%m-%d').date()
+                equipe=departement.get_equipe(date)
+                if not equipe:
+                    err="Aucune équipe disponible pour le %s"%(date)
+        if not err:
+            vals={
+                'partner_id'               : partner.id,
+                'is_nom_chantier'          : nom_chantier,
+                'is_montant_regle_en_ligne': montant_paye,
+                'is_utilisateur_reserve'   : utilisateur,
+            }
+            order = self.env['sale.order'].create(vals)
+            if order:
+                numcde = order.name
+                res["numcde"]=numcde
+                vals={
+                    'order_id'       : order.id,
+                    'product_id'     : product.id,
+                    'name'           : product.name,
+                    'product_uom_qty': 1,
+                    'price_unit'     : tarif_ht,
+                }
+                line = self.env['sale.order.line'].create(vals)
+
+        if not err:
+            vals={
+                'order_id'   : order.id,
+                'date_debut' : date_reservee,
+                'date_fin'   : date_reservee,
+                'equipe_ids' : [(6,0,[equipe.id])],
+                'pose_depose': 'pose',
+            }
+            line = self.env['is.sale.order.planning'].sudo().create(vals)
+        res["err"]=err
+        return(res)
+
+
+    def create_akyos_depose(self, numcde=False, departement=False, date_reservee=False):
+        res={}
+        err=False
+        orders = self.env['sale.order'].search([('name','=',numcde)], limit=1)
+        if len(orders)==0:
+            err="Commande client %s non trouvée dans Odoo"%(numcde)
+        else:
+            order=orders[0]
+        if not err:
+            departements = self.env['is.departement'].search([('name','=',departement)], limit=1)
+            if len(departements)==0:
+                err="Département (%s) non trouvée dans Odoo"%(departement)
+            else:
+                departement=departements[0]
+                date=datetime.strptime(date_reservee, '%Y-%m-%d').date()
+                equipe=departement.get_equipe(date)
+                if not equipe:
+                    err="Aucune équipe disponible pour le %s"%(date)
+        if not err:
+            vals={
+                'order_id'   : order.id,
+                'date_debut' : date_reservee,
+                'date_fin'   : date_reservee,
+                'equipe_ids' : [(6,0,[equipe.id])],
+                'pose_depose': 'depose',
+            }
+            line = self.env['is.sale.order.planning'].sudo().create(vals)
+        res["err"]=err
+        return(res)
 
 
 class IsCreationPlanningPreparation(models.Model):
@@ -982,27 +1127,6 @@ class IsPlanning(models.Model):
     chantier_ids         = fields.One2many('is.planning.line', 'planning_id', u"Chantiers")
 
 
-    # def _merge_pdf(self, documents):
-    #     """Merge PDF files into one.
-    #     :param documents: list of path of pdf files
-    #     :returns: path of the merged pdf
-    #     """
-    #     writer = PdfFileWriter()
-    #     streams = []  # We have to close the streams *after* PdfFilWriter's call to write()
-    #     for document in documents:
-    #         pdfreport = file(document, 'rb')
-    #         streams.append(pdfreport)
-    #         reader = PdfFileReader(pdfreport)
-    #         for page in range(0, reader.getNumPages()):
-    #             writer.addPage(reader.getPage(page))
-    #     merged_file_fd, merged_file_path = tempfile.mkstemp(suffix='.pdf', prefix='report.merged.tmp.')
-    #     with closing(os.fdopen(merged_file_fd, 'w')) as merged_file:
-    #         writer.write(merged_file)
-    #     for stream in streams:
-    #         stream.close()
-    #     return merged_file_path
-
-
     def generer_planning_pdf_action(self):
         cr,uid,context,su = self.env.args
         db = self._cr.dbname
@@ -1095,19 +1219,6 @@ class IsPlanning(models.Model):
             attachment = attachment_obj.create(vals)
             attachment_id=attachment.id
         #******************************************************************
-
-        # #** Envoi du PDF mergé dans le navigateur *************************
-        # if attachment_id:
-        #     return {
-        #         'type' : 'ir.actions.act_url',
-        #         'url': '/web/binary/saveas?model=ir.attachment&field=datas&id='+str(attachment_id)+'&filename_field=name',
-        #         'target': 'new',
-        #     }
-        # #******************************************************************
-
-
-
-
 
 
 class IsChantierPlanning(models.Model):

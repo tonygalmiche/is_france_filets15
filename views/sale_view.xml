@@ -26,6 +26,16 @@
                         .o_form_view .o_form_sheet_bg > .o_form_sheet{
                             max-width: 1800px;
                         }
+                        .o_form_label{
+                            white-space: nowrap;
+                        }
+
+                        .o_form_view .o_td_label .o_form_label:not(.o_status), .o_form_view .o_checkbox_optional_field > .o_form_label {
+                            min-height: 0px;
+                        }
+                        body {
+                            line-height: 1;
+                        }
                     </style>
                 </xpath>
                 <field name="partner_id" position="after">
@@ -48,6 +58,8 @@
                     <field name="is_suivi"/>
                 </field>
                 <field name="payment_term_id" position="after">
+                    <field name="is_utilisateur_reserve"/>
+                    <field name="is_montant_regle_en_ligne"/>
                     <field name="is_date_previsionnelle"/>
                     <field name="is_distance_chantier"/>
                     <field name="is_num_ancien_devis"/>
@@ -59,14 +71,8 @@
                 <xpath expr="//notebook" position="before">
                     <group>
                         <field name="is_entete_devis"/>
-                    </group>
-                    <group>
                         <field name="is_pied_devis"/>
-                    </group>
-                    <group>
                         <field name="is_info_fiche_travail"/>
-                    </group>
-                    <group>
                         <field name="is_piece_jointe_ids" widget="many2many_binary"/>
                     </group>
                 </xpath>
@@ -597,6 +603,50 @@
         <record id="is_equipe_action" model="ir.actions.act_window">
             <field name="name">Types de prestations</field>
             <field name="res_model">is.equipe</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+
+
+        <!-- is.departement -->
+        <record id="is_departement_form_view" model="ir.ui.view">
+            <field name="name">is_departement_from_view</field>
+            <field name="model">is.departement</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="equipe_ids" widget="many2many_tags"/>
+                        </group>
+                    </sheet>
+               </form>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="is_departement_tree_view">
+            <field name="name">is_departement_tree_view</field>
+            <field name="model">is.departement</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name" />
+                    <field name="equipe_ids" widget="many2many_tags"/>
+                </tree>
+            </field>
+        </record>
+        <record id="is_departement_search_view" model="ir.ui.view">
+            <field name="name">is_departement_search_view</field>
+            <field name="model">is.departement</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                </search>
+            </field>
+        </record>
+        <record id="is_departement_action" model="ir.actions.act_window">
+            <field name="name">Départements</field>
+            <field name="res_model">is.departement</field>
             <field name="view_mode">tree,form</field>
         </record>
 
