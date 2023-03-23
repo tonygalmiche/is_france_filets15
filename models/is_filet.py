@@ -36,6 +36,7 @@ class is_filet(models.Model):
     latitude         = fields.Char(u"GPS - Latitude"                    , compute='onchange_mouvement_ids', readonly=True, store=True)
     longitude        = fields.Char(u"GPS - Longitude"                   , compute='onchange_mouvement_ids', readonly=True, store=True)
     depuis_le        = fields.Datetime(u"Depuis le"                     , compute='onchange_mouvement_ids', readonly=True, store=True)
+    effectue_par_id  = fields.Many2one('res.users', 'Effectué par'      , compute='onchange_mouvement_ids', readonly=True, store=True)
     chantier_id      = fields.Many2one('is.chantier', u'Chantier'       , compute='onchange_mouvement_ids', readonly=True, store=True)
     mouvement_ids = fields.One2many('is.filet.mouvement', 'filet_id', u"Mouvements")
 
@@ -67,6 +68,7 @@ class is_filet(models.Model):
                     etat_filet  = m.etat_filet
                     latitude    = m.latitude
                     longitude   = m.longitude
+                    effectue_par_id = m.create_uid
             if depuis_le:
                 obj.position    = position
                 obj.depuis_le   = depuis_le
@@ -74,6 +76,7 @@ class is_filet(models.Model):
                 obj.etat_filet  = etat_filet
                 obj.latitude    = latitude
                 obj.longitude   = longitude
+                obj.effectue_par_id = effectue_par_id
 
 
     def get_nb_filets(self,chantier_id):
@@ -94,6 +97,13 @@ class is_filet_mouvement(models.Model):
     longitude   = fields.Char(u"GPS - Longitude")
     etat_filet  = fields.Selection(_ETAT_FILET, u'État du filet')
     chantier_id = fields.Many2one('is.chantier', u'Chantier')
+
+    type_filet       = fields.Selection(related='filet_id.type_filet')
+    dimensions       = fields.Char(related='filet_id.dimensions')
+    fabriquant       = fields.Char(related='filet_id.fabriquant')
+    num_serie        = fields.Char(related='filet_id.num_serie')
+    date_fabrication = fields.Date(related='filet_id.date_fabrication')
+
 
 
     def get_position_selection(self):
