@@ -19,6 +19,11 @@ InfoSaône - Module Odoo 15 pour France Filets
         'account',
         'purchase',
         'attachment_indexation',
+
+        "base_rest",                    # Pour API Rest Akyos
+        "base_rest_datamodel",          # Pour API Rest Akyos
+        "base_rest_auth_user_service",  # Pour API Rest Akyos
+        "component",                    # Pour API Rest Akyos
 ],
     'data' : [
         'security/res.groups.xml',

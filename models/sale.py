@@ -391,8 +391,6 @@ class SaleOrder(models.Model):
             obj.is_filet_ids   = is_filet_ids
 
 
-
-
     is_nom_chantier         = fields.Char(u'Nom du chantier')
     is_date_previsionnelle  = fields.Date(u'Date prévisionnelle du chantier')
     is_contact_id           = fields.Many2one('res.partner', u'Contact du client')
@@ -471,8 +469,6 @@ class SaleOrder(models.Model):
             obj.invoice_status = 'invoiced'
 
 
-
-
     def create_akyos_order(self, code_client=False, departement=False, zone=False, tarif_ht=False, montant_paye=False, date_reservee=False, prestation=False,nom_chantier=False, utilisateur=False):
         res={}
         err=False
@@ -480,6 +476,7 @@ class SaleOrder(models.Model):
             1: "PRESTATION-01",
             2: "PRESTATION-02",
         }
+        prestation = int(prestation)
         err=False
         if prestation not in prestations:
             err="prestation inconnue ou non définie"
@@ -525,7 +522,6 @@ class SaleOrder(models.Model):
                     'price_unit'     : tarif_ht,
                 }
                 line = self.env['sale.order.line'].create(vals)
-
         if not err:
             vals={
                 'order_id'   : order.id,
