@@ -962,9 +962,9 @@ class IsCreationPlanning(models.Model):
                     chantier=self.env['is.chantier'].create(vals)
                 else:
                     chantier=chantiers[0]
-                piece_jointe_ids=[]
-                for attachment in order.is_piece_jointe_ids:
-                    piece_jointe_ids.append(attachment.id)
+                # piece_jointe_ids=[]
+                # for attachment in order.is_piece_jointe_ids:
+                #     piece_jointe_ids.append(attachment.id)
                 vals={
                     'name'               : order.name,
                     'client'             : order.partner_id.name,
@@ -974,7 +974,7 @@ class IsCreationPlanning(models.Model):
                     'hauteur'            : order.is_hauteur,
                     'type_chantier'      : order.is_type_chantier,
                     'informations'       : order.is_info_fiche_travail,
-                    'piece_jointe_ids'   : [(6,0,piece_jointe_ids)],
+                    #'piece_jointe_ids'   : [(6,0,piece_jointe_ids)],
                 }
                 chantier.write(vals)
                 user_ids=[]
@@ -1305,6 +1305,17 @@ class IsChantierPlanning(models.Model):
                 obj.realisation='\n'.join(filets)
 
 
+
+class IsChantierDocument(models.Model):
+    _name='is.chantier.document'
+    _description = "Documents de fin de chantier"
+    _order='chantier_id,id'
+
+    chantier_id      = fields.Many2one('is.chantier', 'Chantier', required=True, ondelete='cascade', readonly=True,index=True)
+    commentaire      = fields.Char('Commentaire')
+    piece_jointe_ids = fields.Many2many('ir.attachment', 'is_chantier_document_attachment_rel', 'document_id', 'attachment_id', 'Pièces jointes')
+
+
 class IsChantier(models.Model):
     _name='is.chantier'
     _description = "IsChantier"
@@ -1323,11 +1334,36 @@ class IsChantier(models.Model):
     filet_ids        = fields.One2many('is.filet', 'chantier_id', u"Filets")
     informations      = fields.Text(u'Informations diverses', readonly=True)
     piece_jointe_ids  = fields.Many2many('ir.attachment', 'is_chantier_piece_jointe_attachment_rel', 'is_chantier_id', 'attachment_id', u'Pièces jointes', readonly=True)
-    fin_chantier_ids  = fields.Many2many('ir.attachment', 'is_chantier_fin_chantier_attachment_rel', 'is_chantier_id', 'attachment_id', u'Documents de fin de chantier')
+
+    piece_jointe_commande_ids     = fields.Many2many('ir.attachment', u'Pièces jointes commande', compute="_compute_piece_jointe_commande_ids")
+
+    piece_jointe_chantier_ids     = fields.Many2many('ir.attachment', 'is_chantier_piece_jointe_chantier_attachment_rel', 'is_chantier_id', 'attachment_id', u'Pièces jointes chantier')
+    piece_jointe_chantier_ids_readonly = fields.Boolean('Pièces jointes commande vsb', compute="_compute_piece_jointe_chantier_ids_readonly")
+
+    fin_chantier_ids  = fields.Many2many('ir.attachment', 'is_chantier_fin_chantier_attachment_rel', 'is_chantier_id', 'attachment_id', 'Autres documents de fin de chantier')
+    fin_chantier_document = fields.One2many('is.chantier.document', 'chantier_id', "Documents de fin de chantier")
 
 
+    @api.depends('piece_jointe_chantier_ids')
+    def _compute_piece_jointe_chantier_ids_readonly(self):
+        for obj in self:
+            readonly=True
+            if self.env.user.has_group('is_france_filets15.is_chef_chantier_group') or self.env.user.has_group('sales_team.group_sale_manager'):
+                readonly=False
+            obj.piece_jointe_chantier_ids_readonly = readonly
 
 
+    @api.depends('order_id')
+    def _compute_piece_jointe_commande_ids(self):
+        for obj in self:
+            ids=[]
+            for attachment in obj.sudo().order_id.is_piece_jointe_ids:
+                #TODO : Je dois changer le res_id et le res_model de la piece jointe pour que l'utilisateur puisse y accèder
+                attachment.sudo().res_id=obj.id
+                attachment.sudo().res_model=obj._name
+                ids.append(attachment.id)
+            obj.piece_jointe_commande_ids = [(6,0,ids)]
 
-
-
+            # for attachment in obj.sudo().piece_jointe_chantier_ids:
+            #     attachment.sudo().res_id=obj.id
+            #     print(attachment, attachment.name, attachment.res_id, attachment.res_model)

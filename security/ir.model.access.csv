@@ -46,3 +46,5 @@ access_is_planning_pdf,access_is_planning_pdf,model_is_planning_pdf,base.group_u
 
 access_is_departement,access_is_departement,model_is_departement,base.group_user,1,0,0,0
 access_is_departement_manager,access_is_departement_manager,model_is_departement,sales_team.group_sale_manager,1,1,1,1
+
+access_is_chantier_document,access_is_chantier_document,model_is_chantier_document,base.group_user,1,1,1,1

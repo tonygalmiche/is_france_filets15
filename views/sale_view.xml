@@ -495,7 +495,7 @@
             </field>
         </record>
         <record id="is_nacelle_action" model="ir.actions.act_window">
-            <field name="name">Types de prestations</field>
+            <field name="name">Nacelles</field>
             <field name="res_model">is.nacelle</field>
             <field name="view_mode">tree,form</field>
         </record>
@@ -601,7 +601,7 @@
             </field>
         </record>
         <record id="is_equipe_action" model="ir.actions.act_window">
-            <field name="name">Types de prestations</field>
+            <field name="name">Equipe</field>
             <field name="res_model">is.equipe</field>
             <field name="view_mode">tree,form</field>
         </record>
@@ -957,11 +957,33 @@
                                 </tree>
                             </field>
                         </group>
-                        <group string="Pièces jointes">
-                            <field name="piece_jointe_ids" nolabel="1" widget="many2many_binary"/>
+                        <group string="Pièces jointes commande" attrs="{'invisible': [('piece_jointe_commande_ids', '=', [])]}">
+                            <!-- <field name="piece_jointe_ids" nolabel="1" widget="many2many_binary"/> -->
+                            <field name="piece_jointe_commande_ids" nolabel="1" widget="many2many_binary"/>
+                        </group>
+                        <group string="Pièces jointes chantier">
+                            <field name="piece_jointe_chantier_ids_readonly" invisible="1"/>
+                            <field 
+                                name="piece_jointe_chantier_ids" nolabel="1" 
+                                widget="many2many_binary" 
+                                attrs="{'readonly': [('piece_jointe_chantier_ids_readonly', '=', True)]}"
+                            />
                         </group>
                         <group string="Documents de fin de chantier">
-                            <field name="fin_chantier_ids" nolabel="1" widget="many2many_binary"/>
+
+                            <field name="fin_chantier_document" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="commentaire"/>
+                                    <field name="piece_jointe_ids" nolabel="1" widget="many2many_binary"/>
+                                    <field name="create_uid"  optional="show" string="Créé par"/>
+                                    <field name="create_date" optional="show" string="Le"/>
+                                    <field name="write_uid"   optional="show" string="Modifié par"/>
+                                    <field name="write_date"  optional="show" string="Le"/>
+                                </tree>
+                            </field>
+                        </group>
+                        <group string="Autres documents de fin de chantier" attrs="{'invisible': [('fin_chantier_ids', '=', [])]}">
+                            <field name="fin_chantier_ids" nolabel="1" widget="many2many_binary" readonly="1"/>
                         </group>
                         <group string="Informations diverses">
                             <field name="informations" nolabel="1"/>
