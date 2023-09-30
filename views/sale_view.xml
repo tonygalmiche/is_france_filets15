@@ -557,6 +557,7 @@
                         <group>
                             <field name="name"/>
                             <field name="user_id"/>
+                            <field name="chef_secteur_id"/>
                         </group>
                         <group>
                             <field name="absence_ids">
@@ -587,6 +588,7 @@
                 <tree>
                     <field name="name" />
                     <field name="user_id"/>
+                    <field name="chef_secteur_id"/>
                 </tree>
             </field>
         </record>
@@ -597,6 +599,7 @@
                 <search>
                     <field name="name"/>
                     <field name="user_id"/>
+                    <field name="chef_secteur_id"/>
                 </search>
             </field>
         </record>
@@ -903,6 +906,17 @@
 
 
         <!-- Chantier -->
+        <record id="init_chef_secteur_action_server" model="ir.actions.server">
+            <field name="name">init Chef de secteur</field>
+            <field name="model_id" ref="model_is_chantier"/>
+            <field name="binding_model_id" ref="model_is_chantier"/>
+            <field name="state">code</field>
+            <field name="code">action = records._compute_equipe_ids()</field>
+            <field name="groups_id" eval="[(6,0,[
+                    ref('sales_team.group_sale_manager'),
+                ])]"
+            />
+        </record>
         <record id="is_chantier_form_view" model="ir.ui.view">
             <field name="name">is_chantier_from_view</field>
             <field name="model">is.chantier</field>
@@ -917,7 +931,9 @@
                         <group string="Références du chantier">
                             <group>
                                 <field name="name"/>
-                                <field name="user_ids" widget="many2many_tags"/>
+                                <field name="equipe_ids"       widget="many2many_tags" groups="sales_team.group_sale_manager"/>
+                                <field name="user_ids"         widget="many2many_tags"/>
+                                <field name="chef_secteur_ids" widget="many2many_tags" groups="sales_team.group_sale_manager"/>
                                 <field name="order_id" groups="sales_team.group_sale_manager"/>
                                 <field name="client"/>
                             </group>
@@ -999,7 +1015,9 @@
             <field name="arch" type="xml">
                 <tree create="0">
                     <field name="name"/>
-                    <field name="user_ids"/>
+                    <field name="user_ids"         widget="many2many_tags"/>
+                    <field name="equipe_ids"       widget="many2many_tags" optional="hide"/>
+                    <field name="chef_secteur_ids" widget="many2many_tags" optional="hide"/>
                     <field name="client"/>
                     <field name="contact_client"/>
                     <field name="nom_chantier"/>
@@ -1020,7 +1038,7 @@
             </field>
         </record>
         <record id="is_chantier_action" model="ir.actions.act_window">
-            <field name="name">Planning</field>
+            <field name="name">Chantiers</field>
             <field name="res_model">is.chantier</field>
             <field name="view_mode">tree,form</field>
         </record>

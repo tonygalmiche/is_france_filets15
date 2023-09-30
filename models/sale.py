@@ -124,10 +124,11 @@ class IsEquipe(models.Model):
     _description = "IsEquipe"
     _order='name'
 
-    name        = fields.Char(u'Equipe', required=True)
-    user_id     = fields.Many2one('res.users', u"Chef d'équipe", required=True)
-    absence_ids = fields.One2many('is.equipe.absence', 'equipe_id', u"Absences")
-    message_ids = fields.One2many('is.equipe.message', 'equipe_id', u"Messages")
+    name            = fields.Char(u'Equipe', required=True)
+    user_id         = fields.Many2one('res.users', "Chef d'équipe", required=True)
+    chef_secteur_id = fields.Many2one('res.users', "Chef de secteur", help="Un chef de secteur est responsable d'une ou plusieurs équipes")
+    absence_ids     = fields.One2many('is.equipe.absence', 'equipe_id', u"Absences")
+    message_ids     = fields.One2many('is.equipe.message', 'equipe_id', u"Messages")
 
 
     def get_absences(self):
@@ -977,7 +978,7 @@ class IsCreationPlanning(models.Model):
                     #'piece_jointe_ids'   : [(6,0,piece_jointe_ids)],
                 }
                 chantier.write(vals)
-                user_ids=[]
+                #user_ids=[]
                 for line in order.is_planning_ids:
                     plannings = self.env['is.chantier.planning'].search([('sale_order_planning_id','=',line.id)])
                     if not plannings:
@@ -989,8 +990,8 @@ class IsCreationPlanning(models.Model):
                     else:
                         planning=plannings[0]
 
-                    for l in line.equipe_ids:
-                        user_ids.append(l.user_id.id)
+                    #for l in line.equipe_ids:
+                    #    user_ids.append(l.user_id.id)
                     vals={
                         'date_debut'            : line.date_debut,
                         'date_fin'              : line.date_fin,
@@ -999,10 +1000,10 @@ class IsCreationPlanning(models.Model):
                         'etat'                  : line.etat,
                     }
                     planning.write(vals)
-                vals={
-                    'user_ids': [(6,0,user_ids)],
-                }
-                chantier.write(vals)
+                # vals={
+                #     'user_ids': [(6,0,user_ids)],
+                # }
+                # chantier.write(vals)
             #*******************************************************************
 
             #** Ajout des chantiers sur le planning ****************************
@@ -1322,7 +1323,10 @@ class IsChantier(models.Model):
     _order='name'
 
     name              = fields.Char('Chantier / Commande', readonly=True)
-    user_ids          = fields.Many2many('res.users','is_chantier_user_rel','chantier_id','user_id', string=u"Chefs d'équipes", readonly=True)
+    #user_ids          = fields.Many2many('res.users','is_chantier_user_rel','chantier_id','user_id', string=u"Chefs d'équipes", readonly=True)
+    equipe_ids        = fields.Many2many('is.equipe', string="Équipes"        , compute="_compute_equipe_ids", store=True, readonly=True)
+    user_ids          = fields.Many2many('res.users', 'is_chantier_user_rel','chantier_id','user_id', string="Chefs d'équipes", compute="_compute_equipe_ids", store=True, readonly=True)
+    chef_secteur_ids  = fields.Many2many('res.users', string="Chef de secteur", compute="_compute_equipe_ids", store=True, readonly=True)
     order_id          = fields.Many2one('sale.order', "Commande", readonly=True)
     client            = fields.Char('Client', readonly=True)
     contact_client    = fields.Char('Contact Client', readonly=True)
@@ -1344,12 +1348,36 @@ class IsChantier(models.Model):
     fin_chantier_document = fields.One2many('is.chantier.document', 'chantier_id', "Documents de fin de chantier")
 
 
+    @api.depends('order_id','order_id.write_date','order_id.is_planning_ids')
+    def _compute_equipe_ids(self):
+        for obj in self:
+            equipe_ids=[]
+            user_ids=[]
+            chef_secteur_ids=[]
+            for line in obj.sudo().order_id.is_planning_ids:
+                for l in line.equipe_ids:
+                    if l.id not in equipe_ids:
+                        equipe_ids.append(l.id)
+                    if l.chef_secteur_id.id not in chef_secteur_ids:
+                        chef_secteur_ids.append(l.chef_secteur_id.id)
+                    if l.user_id.id not in user_ids:
+                        user_ids.append(l.user_id.id)
+            obj.equipe_ids       = equipe_ids
+            obj.user_ids         = user_ids
+            obj.chef_secteur_ids = chef_secteur_ids
+
+
     @api.depends('piece_jointe_chantier_ids')
     def _compute_piece_jointe_chantier_ids_readonly(self):
         for obj in self:
             readonly=True
-            if self.env.user.has_group('is_france_filets15.is_chef_chantier_group') or self.env.user.has_group('sales_team.group_sale_manager'):
+            chef_secteur_ids=[]
+            for user in obj.chef_secteur_ids:
+                chef_secteur_ids.append(user._origin.id)
+            if self.env.user.id in chef_secteur_ids:
                 readonly=False
+            #if self.env.user.has_group('is_france_filets15.is_chef_chantier_group') or self.env.user.has_group('sales_team.group_sale_manager'):
+            #    readonly=False
             obj.piece_jointe_chantier_ids_readonly = readonly
 
 
@@ -1366,4 +1394,3 @@ class IsChantier(models.Model):
 
             # for attachment in obj.sudo().piece_jointe_chantier_ids:
             #     attachment.sudo().res_id=obj.id
-            #     print(attachment, attachment.name, attachment.res_id, attachment.res_model)

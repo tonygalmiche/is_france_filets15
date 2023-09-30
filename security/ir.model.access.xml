@@ -16,9 +16,23 @@
     </record>
 
     <record id="is_chantier_base_access"  model="ir.rule" >
-        <field name="name">Accès aux chantiers de son équipe</field>
+        <field name="name">Accès aux chantiers au chef d'équipe</field>
         <field name="model_id" ref="model_is_chantier"/>
         <field name="domain_force">[('user_ids','in',user.id)]</field>
+        <field name="groups" eval="[(6,0,[
+            ref('base.group_user'),
+        ])]"/>
+        <field name="perm_create" eval="0" />
+        <field name="perm_read"   eval="1" />
+        <field name="perm_write"  eval="1" />
+        <field name="perm_unlink" eval="0" />
+    </record>
+
+
+    <record id="is_chantier_chef_secteur_access"  model="ir.rule" >
+        <field name="name">Accès aux chantiers au chef de secteur</field>
+        <field name="model_id" ref="model_is_chantier"/>
+        <field name="domain_force">[('chef_secteur_ids','in',user.id)]</field>
         <field name="groups" eval="[(6,0,[
             ref('base.group_user'),
         ])]"/>
@@ -68,8 +82,8 @@
         <field name="perm_write"  eval="1" />
         <field name="perm_unlink" eval="0" />
     </record>
-    <record id="is_chantier_chef_chantier_access"  model="ir.rule" >
-        <field name="name">Accès à tous les chantiers pour le chef de chantiers</field>
+    <!-- <record id="is_chantier_chef_chantier_access"  model="ir.rule" >
+        <field name="name">Accès à tous les chantiers pour le groupe "Chef de chantiers"</field>
         <field name="model_id" ref="model_is_chantier"/>
         <field name="domain_force">[]</field>
         <field name="groups" eval="[(6,0,[
@@ -79,7 +93,7 @@
         <field name="perm_read"   eval="1" />
         <field name="perm_write"  eval="1" />
         <field name="perm_unlink" eval="0" />
-    </record>
+    </record> -->
 
 
     <record id="is_planning_pdf_access"  model="ir.rule" >
