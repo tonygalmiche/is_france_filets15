@@ -1121,7 +1121,11 @@ class IsPlanning(models.Model):
     name                 = fields.Char(u'Planning', required=True,index=True)
     creation_planning_id = fields.Many2one('is.creation.planning', u"Préparation Planning", required=True, index=True)
     equipe_id            = fields.Many2one('is.equipe', u"Equipe")
+    chef_secteur_id      = fields.Many2one(related="equipe_id.chef_secteur_id")
     chantier_ids         = fields.One2many('is.planning.line', 'planning_id', u"Chantiers")
+
+
+#    chef_secteur_ids  = fields.Many2many('res.users', string="Chef de secteur", compute="_compute_equipe_ids", store=True, readonly=True)
 
 
     def generer_planning_pdf_action(self):
