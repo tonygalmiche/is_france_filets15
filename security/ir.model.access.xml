@@ -26,7 +26,7 @@
         <field name="perm_write"  eval="1" />
         <field name="perm_unlink" eval="1" />
     </record>
-    <record id="is_planning_chef_chantier_access"  model="ir.rule" >
+    <!-- <record id="is_planning_chef_chantier_access"  model="ir.rule" >
         <field name="name">Accès à tous les plannings pour le chef de chantiers</field>
         <field name="model_id" ref="model_is_planning"/>
         <field name="domain_force">[]</field>
@@ -37,7 +37,7 @@
         <field name="perm_read"   eval="1" />
         <field name="perm_write"  eval="1" />
         <field name="perm_unlink" eval="0" />
-    </record>
+    </record> -->
     <record id="is_planning_chef_secteur_access"  model="ir.rule" >
         <field name="name">Accès aux plannings du chef de secteur</field>
         <field name="model_id" ref="model_is_planning"/>
