@@ -19,6 +19,7 @@ InfoSaône - Module Odoo 15 pour France Filets
         'account',
         'purchase',
         'attachment_indexation',
+        'hr',
 
         "base_rest",                    # Pour API Rest Akyos
         "base_rest_datamodel",          # Pour API Rest Akyos
@@ -29,16 +30,15 @@ InfoSaône - Module Odoo 15 pour France Filets
         'security/res.groups.xml',
         'security/ir.model.access.csv',
         'security/ir.model.access.xml',
-        # 'views/assets.xml',
         'views/res_company_view.xml',
         'views/partner_view.xml',
         'views/sale_view.xml',
         'views/account_move_view.xml',
         'views/is_export_compta_view.xml',
         'views/is_sale_order_line.xml',
-        # 'views/is_account_invoice_line.xml',
         'views/is_filet_view.xml',
         'views/is_suivi_budget_view.xml',
+        'views/is_document_employe_view.xml',
         'views/report_templates.xml',
         'views/menu.xml',
         'report/sale_report_templates.xml',
@@ -48,7 +48,6 @@ InfoSaône - Module Odoo 15 pour France Filets
         'report/pv_reception_report_templates.xml',
         'report/is_suivi_budget_report_templates.xml',
         'report/is_suivi_budget_journal_vente_report_templates.xml',
-        # 'report/layouts.xml',
         'report/report.xml',
     ],
     'installable': True,
