@@ -2,7 +2,7 @@
 
 from odoo import api, fields, models, tools
 from datetime import datetime, timedelta
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, ValidationError, UserError  # type: ignore
 from odoo.http import request
 import os
 import base64
@@ -1320,6 +1320,23 @@ class IsChantierDocument(models.Model):
     commentaire      = fields.Char('Commentaire')
     piece_jointe_ids = fields.Many2many('ir.attachment', 'is_chantier_document_attachment_rel', 'document_id', 'attachment_id', 'Pièces jointes')
 
+    user_ids         = fields.Many2many(related="chantier_id.user_ids")
+
+
+
+    def write(self,vals):
+        if not self.env['res.users'].has_group('is_france_filets15.is_chef_secteur_group'):
+            raise AccessError("Il n'y a que le chef de secteur autorisé à modifier une ligne !")
+        res = super(IsChantierDocument, self).write(vals)
+        return res
+
+
+    def unlink(self):
+        if not self.env['res.users'].has_group('is_france_filets15.is_chef_secteur_group'):
+            raise AccessError("Il n'y a que le chef de secteur autorisé à supprimer une ligne !")
+        res = super(IsChantierDocument, self).unlink()
+        return res
+
 
 class IsChantier(models.Model):
     _name='is.chantier'
@@ -1327,7 +1344,6 @@ class IsChantier(models.Model):
     _order='name'
 
     name              = fields.Char('Chantier / Commande', readonly=True)
-    #user_ids          = fields.Many2many('res.users','is_chantier_user_rel','chantier_id','user_id', string=u"Chefs d'équipes", readonly=True)
     equipe_ids        = fields.Many2many('is.equipe', string="Équipes"        , compute="_compute_equipe_ids", store=True, readonly=True)
     user_ids          = fields.Many2many('res.users', 'is_chantier_user_rel','chantier_id','user_id', string="Chefs d'équipes", compute="_compute_equipe_ids", store=True, readonly=True)
     chef_secteur_ids  = fields.Many2many('res.users', string="Chef de secteur", compute="_compute_equipe_ids", store=True, readonly=True)
@@ -1349,7 +1365,7 @@ class IsChantier(models.Model):
     piece_jointe_chantier_ids_readonly = fields.Boolean('Pièces jointes commande vsb', compute="_compute_piece_jointe_chantier_ids_readonly")
 
     fin_chantier_ids  = fields.Many2many('ir.attachment', 'is_chantier_fin_chantier_attachment_rel', 'is_chantier_id', 'attachment_id', 'Autres documents de fin de chantier')
-    fin_chantier_document = fields.One2many('is.chantier.document', 'chantier_id', "Documents de fin de chantier")
+    fin_chantier_document = fields.One2many('is.chantier.document', 'chantier_id', "Documents de suivi de chantier")
 
 
     @api.depends('order_id','order_id.write_date','order_id.is_planning_ids')

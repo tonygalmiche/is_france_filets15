@@ -666,18 +666,21 @@
                             name="preparer_planning_action"
                             type="object"
                             string="Préparer le planning"
+                            groups="sales_team.group_sale_manager"
                         />
                         <button
                             name="mail_planning_action"
                             type="object"
                             string="Envoyer le mail"
                             confirm="Confirmer l'envoi du mail ?"
+                            groups="sales_team.group_sale_manager"
                         />
                         <button
                             name="sms_planning_action"
                             type="object"
                             string="Envoyer les SMS"
                             confirm="Confirmer l'envoi des SMS ?"
+                            groups="sales_team.group_sale_manager"
                         />
                     </header>
                     <sheet>
@@ -984,7 +987,7 @@
                                 attrs="{'readonly': [('piece_jointe_chantier_ids_readonly', '=', True)]}"
                             />
                         </group>
-                        <group string="Documents de fin de chantier">
+                        <group string="Documents de suivi de chantier">
 
                             <field name="fin_chantier_document" nolabel="1">
                                 <tree editable="bottom">
@@ -997,7 +1000,7 @@
                                 </tree>
                             </field>
                         </group>
-                        <group string="Autres documents de fin de chantier" attrs="{'invisible': [('fin_chantier_ids', '=', [])]}">
+                        <group string="Autres documents de suivi de chantier" attrs="{'invisible': [('fin_chantier_ids', '=', [])]}">
                             <field name="fin_chantier_ids" nolabel="1" widget="many2many_binary" readonly="1"/>
                         </group>
                         <group string="Informations diverses">
@@ -1033,6 +1036,11 @@
                     <field name="name"/>
                     <field name="user_ids"/>
                     <field name="order_id"/>
+                    <field name="equipe_ids"/>
+                    <field name="chef_secteur_ids"/>
+                    <field name="client"/>
+                    <field name="contact_client"/>
+                    <field name="nom_chantier"/>
                 </search>
             </field>
         </record>
@@ -1041,6 +1049,70 @@
             <field name="res_model">is.chantier</field>
             <field name="view_mode">tree,form</field>
         </record>
+
+
+
+
+        <!-- Documents de suivi de chantier -->
+        <record id="is_chantier_document_form_view" model="ir.ui.view">
+            <field name="name">is_chantier_document_from_view</field>
+            <field name="model">is.chantier.document</field>
+            <field name="arch" type="xml">
+                <form delete="0" create="0" edit="0">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="chantier_id" />
+                                <field name="user_ids"         widget="many2many_tags"/>
+                                <field name="commentaire" />
+                                <field name="piece_jointe_ids" />
+                            </group>
+                            <group>
+                                <field name="create_uid" />
+                                <field name="create_date" />
+                                <field name="write_uid" />
+                                <field name="write_date" />
+                            </group>
+                        </group>
+                    </sheet>
+               </form>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="is_chantier_document_tree_view">
+            <field name="name">is_chantier_document_tree_view</field>
+            <field name="model">is.chantier.document</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree delete="0" create="0">
+                    <field name="chantier_id" widget="many2one_clickable"/>
+                    <field name="user_ids"         optional="show"  widget="many2many_tags"/>
+                    <field name="commentaire"      optional="show"/>
+                    <field name="piece_jointe_ids" optional="show" nolabel="1" widget="many2many_binary"/>
+                    <field name="create_uid"       optional="show" string="Créé par"/>
+                    <field name="create_date"      optional="show" string="Le"/>
+                    <field name="write_uid"        optional="show" string="Modifié par"/>
+                    <field name="write_date"       optional="show" string="Le"/>
+                </tree>
+            </field>
+        </record>
+        <record id="is_chantier_document_search_view" model="ir.ui.view">
+            <field name="name">is_chantier_document_search_view</field>
+            <field name="model">is.chantier.document</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="chantier_id" />
+                    <field name="user_ids" />
+                    <field name="commentaire" />
+                </search>
+            </field>
+        </record>
+        <record id="is_chantier_document_action" model="ir.actions.act_window">
+            <field name="name">Documents de suivi de chantier</field>
+            <field name="res_model">is.chantier.document</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
 
         <!-- Chantier Planning -->
         <record id="is_chantier_planning_form_view" model="ir.ui.view">

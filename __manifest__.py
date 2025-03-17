@@ -50,6 +50,13 @@ InfoSaône - Module Odoo 15 pour France Filets
         'report/is_suivi_budget_journal_vente_report_templates.xml',
         'report/report.xml',
     ],
+
+    'assets': {
+        'web.assets_backend': [
+            'is_france_filets15/static/src/css/style.css',
+        ]
+    },
+
     'installable': True,
     'application': True,
     'qweb': [
