@@ -236,6 +236,7 @@ class IsSaleOrderPlanning(models.Model):
     date_fin       = fields.Date(u'Date fin')
     commentaire    = fields.Text('Commentaire planning')
     equipe_ids     = fields.Many2many('is.equipe','is_sale_order_planning_equipe_rel','order_id','equipe_id', string="Equipes")
+    equipier_ids   = fields.Many2many('hr.employee','is_sale_order_planning_employee_rel','order_id','employee_id', string="Equipiers")
     pose_depose    = fields.Selection([
         ('pose'  , 'Pose'),
         ('depose', 'Dépose'),
@@ -955,6 +956,9 @@ class IsCreationPlanning(models.Model):
             #** Création des chantiers *****************************************
             self.env['is.chantier.planning'].search([('sale_order_planning_id','=',False)]).unlink()
             for order in orders:
+
+                print(order.name)
+
                 chantiers = self.env['is.chantier'].search([('order_id','=',order.id)])
                 if not chantiers:
                     vals={
@@ -998,6 +1002,8 @@ class IsCreationPlanning(models.Model):
                         'commentaire'           : line.commentaire,
                         'pose_depose'           : line.pose_depose,
                         'etat'                  : line.etat,
+                        'equipe_ids'            : [(6,0,line.equipe_ids.ids)],
+                        'equipier_ids'          : [(6,0,line.equipier_ids.ids)],
                     }
                     planning.write(vals)
                 # vals={
@@ -1233,6 +1239,7 @@ class IsChantierPlanning(models.Model):
     date_fin               = fields.Date(u'Date fin', readonly=True)
     commentaire            = fields.Text(u'Commentaire planning', readonly=True)
     equipe_ids             = fields.Many2many('is.equipe','is_chantier_planning_equipe_rel','chantier_id','equipe_id', string=u"Equipes", readonly=True)
+    equipier_ids           = fields.Many2many('hr.employee','is_chantier_planning_employee_rel','chantier_id','employee_id', string=u"Equipiers", readonly=True)
     pose_depose            = fields.Selection([
         ('pose'  , 'Pose'),
         ('depose', 'Dépose'),
@@ -1317,7 +1324,7 @@ class IsChantierDocument(models.Model):
     _order='chantier_id,id'
 
     chantier_id      = fields.Many2one('is.chantier', 'Chantier', required=True, ondelete='cascade', readonly=True,index=True)
-    commentaire      = fields.Char('Commentaire')
+    commentaire      = fields.Text('Commentaire')
     piece_jointe_ids = fields.Many2many('ir.attachment', 'is_chantier_document_attachment_rel', 'document_id', 'attachment_id', 'Pièces jointes')
 
     user_ids         = fields.Many2many(related="chantier_id.user_ids")
@@ -1345,6 +1352,7 @@ class IsChantier(models.Model):
 
     name              = fields.Char('Chantier / Commande', readonly=True)
     equipe_ids        = fields.Many2many('is.equipe', string="Équipes"        , compute="_compute_equipe_ids", store=True, readonly=True)
+    equipier_ids      = fields.Many2many('hr.employee', string="Equipiers"    , compute="_compute_equipe_ids", store=True, readonly=True)
     user_ids          = fields.Many2many('res.users', 'is_chantier_user_rel','chantier_id','user_id', string="Chefs d'équipes", compute="_compute_equipe_ids", store=True, readonly=True)
     chef_secteur_ids  = fields.Many2many('res.users', string="Chef de secteur", compute="_compute_equipe_ids", store=True, readonly=True)
     order_id          = fields.Many2one('sale.order', "Commande", readonly=True)
@@ -1372,6 +1380,7 @@ class IsChantier(models.Model):
     def _compute_equipe_ids(self):
         for obj in self:
             equipe_ids=[]
+            equipier_ids=[]
             user_ids=[]
             chef_secteur_ids=[]
             for line in obj.sudo().order_id.is_planning_ids:
@@ -1382,7 +1391,11 @@ class IsChantier(models.Model):
                         chef_secteur_ids.append(l.chef_secteur_id.id)
                     if l.user_id.id not in user_ids:
                         user_ids.append(l.user_id.id)
+                for equipier in line.equipier_ids:
+                    if equipier.id not in equipier_ids:
+                        equipier_ids.append(equipier.id)
             obj.equipe_ids       = equipe_ids
+            obj.equipier_ids     = equipier_ids
             obj.user_ids         = user_ids
             obj.chef_secteur_ids = chef_secteur_ids
 
@@ -1414,3 +1427,20 @@ class IsChantier(models.Model):
 
             # for attachment in obj.sudo().piece_jointe_chantier_ids:
             #     attachment.sudo().res_id=obj.id
+
+
+    def voir_equipiers_action(self):
+        """Ouvre la liste des équipiers du chantier"""
+        for obj in self:
+            return {
+                'name': "Equipiers du chantier " + str(obj.name),
+                'view_mode': 'tree,form',
+                'view_type': 'form',
+                'res_model': 'hr.employee',
+                'type': 'ir.actions.act_window',
+                'domain': [('id', 'in', obj.equipier_ids.ids)],
+                'views': [
+                    (self.env.ref('is_france_filets15.is_hr_employee_simple_tree_view').id, 'tree'),
+                    (self.env.ref('is_france_filets15.is_hr_employee_simple_form_view').id, 'form'),
+                ],
+            }
