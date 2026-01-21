@@ -99,12 +99,15 @@
                         <group string="Filets" attrs="{'invisible': [('is_filet_ids', '=', [])]}">
                             <field name="is_filet_ids" nolabel="1" readonly="1">
                                  <tree>
+                                    <button title="Voir la fiche du filet" name="voir_filet_action" type="object" icon="fa-search-plus"/>
                                     <field name="name"/>
                                     <field name="type_filet"/>
                                     <field name="dimensions"/>
                                     <field name="fabriquant"/>
                                     <field name="etat_filet"/>
                                     <field name="position"/>
+                                    <field name="chantier_id" widget="many2one_clickable"/>
+                                    <field name="zone_id"/>
                                     <field name="depuis_le"/>
                                 </tree>
                             </field>
@@ -112,6 +115,13 @@
                         <group attrs="{'invisible': [('is_filet_ids', '=', [])]}">
                             <field name="is_chantier_id"/>
                         </group>
+                    </page>
+                    <page string="Zones">
+                        <field name="is_zone_ids" nolabel="1">
+                            <tree editable="bottom">
+                                <field name="name"/>
+                            </tree>
+                        </field>
                     </page>
                     <page string="Contrôle de gestion">
                         <field name="is_controle_gestion_ids">
@@ -943,6 +953,7 @@
                                 <field name="user_ids"         widget="many2many_tags"/>
                                 <field name="chef_secteur_ids" widget="many2many_tags" groups="sales_team.group_sale_manager"/>
                                 <field name="order_id" groups="sales_team.group_sale_manager"/>
+                                <field name="zone_ids" widget="many2many_tags" attrs="{'invisible': [('zone_ids','=',[])]}"/>
                                 <field name="client"/>
                             </group>
                             <group>
@@ -972,12 +983,14 @@
                         <group string="Filets" attrs="{'invisible': [('filet_ids', '=', [])]}">
                             <field name="filet_ids" nolabel="1" readonly="1">
                                  <tree>
+                                    <button title="Voir la fiche du filet" name="voir_filet_action" type="object" icon="fa-search-plus"/>
                                     <field name="name"/>
                                     <field name="type_filet"/>
                                     <field name="dimensions"/>
                                     <field name="fabriquant"/>
                                     <field name="etat_filet"/>
                                     <field name="position"/>
+                                    <field name="zone_id"/>
                                     <field name="depuis_le"/>
                                 </tree>
                             </field>

@@ -38,6 +38,7 @@ class is_filet(models.Model):
     depuis_le        = fields.Datetime(u"Depuis le"                     , compute='onchange_mouvement_ids', readonly=True, store=True)
     effectue_par_id  = fields.Many2one('res.users', 'Effectué par'      , compute='onchange_mouvement_ids', readonly=True, store=True)
     chantier_id      = fields.Many2one('is.chantier', u'Chantier'       , compute='onchange_mouvement_ids', readonly=True, store=True)
+    zone_id          = fields.Many2one('is.sale.order.zone', u'Zone'    , compute='onchange_mouvement_ids', readonly=True, store=True)
     mouvement_ids = fields.One2many('is.filet.mouvement', 'filet_id', u"Mouvements")
 
 
@@ -58,6 +59,7 @@ class is_filet(models.Model):
     def onchange_mouvement_ids(self):
         for obj in self:
             depuis_le=False
+            zone_id = False
             for m in obj.mouvement_ids:
                 if not depuis_le:
                     depuis_le=m.name
@@ -69,6 +71,7 @@ class is_filet(models.Model):
                     latitude    = m.latitude
                     longitude   = m.longitude
                     effectue_par_id = m.create_uid
+                    zone_id     = m.zone_id.id
             if depuis_le:
                 obj.position    = position
                 obj.depuis_le   = depuis_le
@@ -77,12 +80,26 @@ class is_filet(models.Model):
                 obj.latitude    = latitude
                 obj.longitude   = longitude
                 obj.effectue_par_id = effectue_par_id
+                obj.zone_id     = zone_id
 
 
     def get_nb_filets(self,chantier_id):
         """Retourne pour l'application mobile, le nombre de filets pour un chantier"""
         ids = self.env['is.filet'].search([('chantier_id','=',chantier_id)])
         return len(ids)
+
+
+    def voir_filet_action(self):
+        """Ouvre la fiche du filet"""
+        for obj in self:
+            return {
+                'name': "Filet " + str(obj.name),
+                'view_mode': 'form',
+                'view_type': 'form',
+                'res_model': 'is.filet',
+                'type': 'ir.actions.act_window',
+                'res_id': obj.id,
+            }
 
 
 class is_filet_mouvement(models.Model):
@@ -97,6 +114,16 @@ class is_filet_mouvement(models.Model):
     longitude   = fields.Char(u"GPS - Longitude")
     etat_filet  = fields.Selection(_ETAT_FILET, u'État du filet')
     chantier_id = fields.Many2one('is.chantier', u'Chantier')
+    zone_id     = fields.Many2one('is.sale.order.zone', u'Zone')
+    zone_ids    = fields.Many2many('is.sale.order.zone', string='Zones disponibles', compute='_compute_zone_ids')
+
+    @api.depends('chantier_id')
+    def _compute_zone_ids(self):
+        for obj in self:
+            zone_ids = []
+            if obj.chantier_id and obj.chantier_id.order_id:
+                zone_ids = obj.chantier_id.order_id.is_zone_ids.ids
+            obj.zone_ids = [(6, 0, zone_ids)]
 
     type_filet       = fields.Selection(related='filet_id.type_filet')
     dimensions       = fields.Char(related='filet_id.dimensions')

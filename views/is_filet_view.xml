@@ -54,6 +54,7 @@
                                 <field name="longitude"/>
                                 <field name="etat_filet"/>
                                 <field name="chantier_id"/>
+                                <field name="zone_id" attrs="{'invisible': [('position','!=','chantier')]}"/>
                             </group>
                         </group>
                         <field name="mouvement_ids">
@@ -64,6 +65,8 @@
                                 <field name="longitude"/>
                                 <field name="etat_filet"/>
                                 <field name="chantier_id"/>
+                                <field name="zone_ids" invisible="1"/>
+                                <field name="zone_id" domain="[('id','in',zone_ids)]" attrs="{'readonly': [('zone_ids','=',[])], 'required': [('zone_ids','!=',[])]}"/>
                                 <field name="create_uid" string="Effectué par"/>
                             </tree>
                         </field>
@@ -106,12 +109,14 @@
             <field name="arch" type="xml">
                 <tree >
                     <field name="filet_id"/>
-                     <field name="name"/>
+                    <field name="name"/>
                     <field name="position"         optional="show"/>
                     <field name="latitude"         optional="show"/>
                     <field name="longitude"        optional="show"/>
                     <field name="etat_filet"       optional="show"/>
                     <field name="chantier_id"      optional="show"/>
+                    <field name="zone_ids" invisible="1"/>
+                    <field name="zone_id" optional="show" domain="[('id','in',zone_ids)]" attrs="{'readonly': [('zone_ids','=',[])], 'required': [('zone_ids','!=',[])]}"/>
                     <field name="create_uid"       optional="show" string="Effectué par"/>
                     <field name="type_filet"       optional="show"/>
                     <field name="dimensions"       optional="show"/>
@@ -135,6 +140,8 @@
                             <field name="longitude"/>
                             <field name="etat_filet"/>
                             <field name="chantier_id"/>
+                            <field name="zone_ids" invisible="1"/>
+                            <field name="zone_id" domain="[('id','in',zone_ids)]" attrs="{'readonly': [('zone_ids','=',[])], 'required': [('zone_ids','!=',[])]}"/>
                             <field name="create_uid" string="Effectué par"/>
                         </group>
                     </sheet>

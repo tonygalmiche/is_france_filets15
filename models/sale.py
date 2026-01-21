@@ -284,6 +284,20 @@ class IsSaleOrderPlanning(models.Model):
         return avertissements
 
 
+class IsSaleOrderZone(models.Model):
+    _name='is.sale.order.zone'
+    _description = "Zone de la commande"
+    _order='order_id,name'
+
+    order_id = fields.Many2one('sale.order', 'Commande', required=True, ondelete='cascade', readonly=True, index=True)
+    name     = fields.Char('Zone', required=True)
+
+    def unlink(self):
+        for obj in self:
+            mouvements = self.env['is.filet.mouvement'].search([('zone_id', '=', obj.id)])
+            if mouvements:
+                raise UserError("Impossible de supprimer la zone '%s' car elle est utilisée dans %d mouvement(s) de filet." % (obj.name, len(mouvements)))
+        return super(IsSaleOrderZone, self).unlink()
 
 
 class SaleOrder(models.Model):
@@ -414,6 +428,7 @@ class SaleOrder(models.Model):
     is_type_prestation_id   = fields.Many2one('is.type.prestation', u'Type de prestation')
     is_nacelle_id           = fields.Many2one('is.nacelle', u'Nacelle')
     is_planning_ids         = fields.One2many('is.sale.order.planning', 'order_id', u"Planning")
+    is_zone_ids             = fields.One2many('is.sale.order.zone', 'order_id', u"Zones")
 
     is_chantier_id          = fields.Many2one('is.chantier', u'Chantier', compute='_compute_chantier_id', readonly=True, store=False)
     is_filet_ids            = fields.One2many('is.filet', 'chantier_id', u"Filets", compute='_compute_chantier_id', readonly=True, store=False)
@@ -1131,9 +1146,6 @@ class IsPlanning(models.Model):
     chantier_ids         = fields.One2many('is.planning.line', 'planning_id', u"Chantiers")
 
 
-#    chef_secteur_ids  = fields.Many2many('res.users', string="Chef de secteur", compute="_compute_equipe_ids", store=True, readonly=True)
-
-
     def generer_planning_pdf_action(self):
         cr,uid,context,su = self.env.args
         db = self._cr.dbname
@@ -1356,6 +1368,7 @@ class IsChantier(models.Model):
     user_ids          = fields.Many2many('res.users', 'is_chantier_user_rel','chantier_id','user_id', string="Chefs d'équipes", compute="_compute_equipe_ids", store=True, readonly=True)
     chef_secteur_ids  = fields.Many2many('res.users', string="Chef de secteur", compute="_compute_equipe_ids", store=True, readonly=True)
     order_id          = fields.Many2one('sale.order', "Commande", readonly=True)
+    zone_ids          = fields.Many2many('is.sale.order.zone', string="Zones", compute="_compute_zone_ids", readonly=True)
     client            = fields.Char('Client', readonly=True)
     contact_client    = fields.Char('Contact Client', readonly=True)
     nom_chantier      = fields.Char('Nom du chantier', readonly=True)
@@ -1398,6 +1411,15 @@ class IsChantier(models.Model):
             obj.equipier_ids     = equipier_ids
             obj.user_ids         = user_ids
             obj.chef_secteur_ids = chef_secteur_ids
+
+
+    @api.depends('order_id')
+    def _compute_zone_ids(self):
+        for obj in self:
+            zone_ids = []
+            if obj.order_id:
+                zone_ids = obj.order_id.is_zone_ids.ids
+            obj.zone_ids = [(6, 0, zone_ids)]
 
 
     @api.depends('piece_jointe_chantier_ids')
