@@ -954,7 +954,7 @@
                                 <field name="chef_secteur_ids" widget="many2many_tags" groups="sales_team.group_sale_manager"/>
                                 <field name="order_id" groups="sales_team.group_sale_manager"/>
                                 <field name="zone_ids" widget="many2many_tags" attrs="{'invisible': [('zone_ids','=',[])]}"/>
-                                <field name="client"/>
+                               <field name="client"/>
                             </group>
                             <group>
                                 <field name="nom_chantier"/>
@@ -1045,7 +1045,7 @@
                     <field name="contact_client"/>
                     <field name="nom_chantier"/>
                     <field name="type_chantier"/>
-
+                    <field name="zone_ids" widget="many2many_tags" optional="hide"/>
                 </tree>
             </field>
         </record>

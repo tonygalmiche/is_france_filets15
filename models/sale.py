@@ -1418,7 +1418,7 @@ class IsChantier(models.Model):
         for obj in self:
             zone_ids = []
             if obj.order_id:
-                zone_ids = obj.order_id.is_zone_ids.ids
+                zone_ids = obj.sudo().order_id.is_zone_ids.ids
             obj.zone_ids = [(6, 0, zone_ids)]
 
 
